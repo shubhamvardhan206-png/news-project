@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+<!-- Breaking News Ticker -->
+<div class="bg-danger text-white py-2">
+  <div class="container d-flex gap-3">
+    <span class="badge bg-white text-danger fw-bold">🔴 LIVE</span>
+    <marquee>Breaking News • Stay Updated • Latest Stories</marquee>
+  </div>
+</div>
+
+<!-- Hero Featured Article -->
+{% if featured %}
+<div class="container my-4">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card border-0 shadow-lg overflow-hidden">
+        {% if featured.image %}
+        <img src="{{ featured.image.url }}" 
+             class="card-img-top" 
+             style="height:400px; object-fit:cover;">
+        {% else %}
+        <div class="bg-dark text-white d-flex align-items-center justify-content-center"
+             style="height:400px;">
+          <h2>📰 Featured Story</h2>
+        </div>
+        {% endif %}
+        <div class="card-body">
+          <span class="badge bg-danger mb-2">Featured</span>
+          <h2 class="card-title">
+            <a href="{% url 'article_detail' featured.slug %}" 
+               class="text-dark text-decoration-none">
+              {{ featured.title }}
+            </a>
+          </h2>
+          <p class="text-muted">{{ featured.summary|truncatewords:30 }}</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              👁 {{ featured.views }} views
+            </small>
+            <a href="{% url 'article_detail' featured.slug %}" 
+               class="btn btn-danger">
+              Read More →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Trending -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow h-100">
+        <div class="card-header bg-dark text-white">
+          🔥 Trending Now
+        </div>
+        <div class="card-body p-0">
+          {% for article in trending %}
+          <div class="border-bottom p-3">
+            <span class="badge bg-danger me-1">{{ forloop.counter }}</span>
+            <a href="{% url 'article_detail' article.slug %}" 
+               class="text-dark text-decoration-none fw-bold">
+              {{ article.title|truncatewords:8 }}
+            </a>
+            <br>
+            <small class="text-muted">👁 {{ article.views }}</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Category Filter -->
+<div class="container my-3">
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="/" 
+       class="btn {% if not active_category %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm">
+      All
+    </a>
+    {% for cat in categories %}
+    <a href="/?category={{ cat.slug }}" 
+       class="btn {% if active_category == cat.slug %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm">
+      {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Latest Articles Grid -->
+<div class="container my-4">
+  <h4 class="border-start border-danger border-4 ps-2 mb-4">
+    Latest News
+  </h4>
+  <div class="row g-4">
+    {% for article in articles %}
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm hover-shadow">
+        {% if article.image and article.image.url %}
+          <img src="{{ article.image.url }}" 
+               alt="{{ article.title }}"
+               class="card-img-top"
+               style="height:200px; object-fit:cover;">
+        {% else %}
+          <div class="bg-light d-flex align-items-center justify-content-center" style="height:200px; background-color: #f0f0f0 !important;">
+            <!-- Empty div - no icon -->
+          </div>
+        {% endif %}
+        
+        <div class="card-body">
+          {% if article.category %}
+          <span class="badge bg-danger mb-2">
+            {{ article.category.name }}
+          </span>
+          {% endif %}
+          {% if article.is_premium %}
+          <span class="badge bg-warning text-dark mb-2">
+            ⭐ Premium
+          </span>
+          {% endif %}
+          
+          <h5 class="card-title">
+            <a href="{% url 'article_detail' article.slug %}" 
+               class="text-dark text-decoration-none">
+              {{ article.title }}
+            </a>
+          </h5>
+          
+          <p class="card-text text-muted">
+            {{ article.summary|default:article.content|truncatewords:20|striptags }}
+          </p>
+        </div>
+        
+        <div class="card-footer bg-white border-0 pt-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              👁 {{ article.views|default:"0" }} views
+            </small>
+            <a href="{% url 'article_detail' article.slug %}" 
+               class="btn btn-sm btn-danger">
+              Read →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+      <h4 class="text-muted">No articles yet</h4>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- API World News -->
+
+          {% if api_news %}
+<div class="container my-5">
+  
+  <!-- Heading — category ke hisaab se -->
+  <h4 class="border-start border-primary border-4 ps-2 mb-4">
+    🌍 {% if active_category %}{{ active_category|title }}{% else %}Latest{% endif %} World & India News
+  </h4>
+
+  <!-- India News -->
+  <h5 style="color:#e63946; margin-bottom:10px;">🇮🇳 India News</h5>
+  <div class="row g-3 mb-4">
+    {% for news in api_news %}
+    {% if news.source_region == '🇮🇳 India' %}
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        {% if news.urlToImage %}
+        <img src="{{ news.urlToImage }}" 
+             style="height:150px; object-fit:cover; width:100%;"
+             onerror="this.style.display='none'">
+        {% endif %}
+        <div class="card-body py-2">
+          <small class="text-danger fw-bold">{{ news.source.name }}</small>
+          <p class="card-text small fw-bold mt-1">
+            {{ news.title|truncatechars:80 }}
+          </p>
+          <a href="{{ news.url }}" target="_blank" 
+             class="btn btn-sm btn-outline-danger">
+            Read →
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- World News -->
+  <h5 style="color:#2980b9; margin-bottom:10px;">🌍 World News</h5>
+  <div class="row g-3">
+    {% for news in api_news %}
+    {% if news.source_region == '🌍 World' %}
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        {% if news.urlToImage %}
+        <img src="{{ news.urlToImage }}" 
+             style="height:150px; object-fit:cover; width:100%;"
+             onerror="this.style.display='none'">
+        {% endif %}
+        <div class="card-body py-2">
+          <small class="text-primary fw-bold">{{ news.source.name }}</small>
+          <p class="card-text small fw-bold mt-1">
+            {{ news.title|truncatechars:80 }}
+          </p>
+          <a href="{{ news.url }}" target="_blank" 
+             class="btn btn-sm btn-outline-primary">
+            Read →
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Checkout — NewsPortal{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  /* CENTRAL PAGE BACKGROUND */
+  .np-pay-page {
+    background-color: #121212 !important; 
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  /* PREMIUM CARD LAYOUT */
+  .checkout-card {
+    background: linear-gradient(rgba(255,255,255,0.01), rgba(255,255,255,0.01)), #181818;
+    width: 100%;
+    max-width: 450px;
+    padding: 40px 35px;
+    border-radius: 12px;
+    box-sizing: border-box;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    border: 1px solid #282828;
+  }
+
+  /* HEADER SECTIONS */
+  .pay-header {
+    text-align: center;
+    margin-bottom: 25px;
+  }
+
+  .pay-header h2 {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pay-header h2 i {
+    color: #1ed760; /* Premium Green */
+  }
+
+  .pay-header p {
+    color: #a7a7a7;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* TAB NAVIGATION SYSTEM */
+  .pay-tabs {
+    display: flex;
+    background-color: #242424;
+    padding: 4px;
+    border-radius: 30px;
+    margin-bottom: 25px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #a7a7a7;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 25px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .tab-btn.active {
+    background-color: #333333;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  /* CONTROLLER FOR PANELS */
+  .pay-panel {
+    display: none;
+  }
+
+  .pay-panel.active {
+    display: block;
+  }
+
+  /* FORM COMPONENT STYLING */
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .input-group label {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .input-group input {
+    width: 100%;
+    padding: 14px;
+    background-color: #242424;
+    border: 1px solid #404040;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: all 0.2s;
+  }
+
+  .input-group input:focus {
+    outline: none;
+    border-color: #1ed760;
+    background-color: #2a2a2a;
+  }
+
+  /* PHONEPE/GPAY PATH HELPER CONTAINER */
+  .help-box {
+    background-color: rgba(30, 215, 96, 0.05);
+    border: 1px dashed rgba(30, 215, 96, 0.3);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .help-box i {
+    color: #1ed760;
+    margin-top: 2px;
+  }
+
+  .help-box p {
+    margin: 0;
+    color: #b3b3b3;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .help-box strong {
+    color: #ffffff;
+  }
+
+  /* FIXED QR CODE VIEW AREA */
+  .qr-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 25px auto;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    position: relative;
+    border: 4px solid #1ed760;
+  }
+
+  .qr-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* ACTION SUBMIT BUTTON */
+  .btn-action-pay {
+    width: 100%;
+    padding: 15px;
+    background-color: #1ed760;
+    color: #000000;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-action-pay:hover {
+    background-color: #21e065;
+    transform: scale(1.02);
+  }
+
+  .btn-secondary-action {
+    background-color: #242424;
+    color: #ffffff;
+    border: 1px solid #404040;
+    margin-top: 12px;
+  }
+
+  .btn-secondary-action:hover {
+    background-color: #333333;
+    border-color: #ffffff;
+  }
+</style>
+
+<div class="np-pay-page">
+  <div class="checkout-card">
+    
+    <div class="pay-header">
+      <h2><i class="fa-solid fa-credit-card"></i> Secure Checkout</h2>
+      <p>Choose your preferred UPI method to continue payment</p>
+    </div>
+
+    <div class="pay-tabs">
+      <button type="button" class="tab-btn active" onclick="switchPayTab('id-panel', this)">
+        <i class="fa-solid fa-at"></i> UPI ID
+      </button>
+      <button type="button" class="tab-btn" onclick="switchPayTab('qr-panel', this)">
+        <i class="fa-solid fa-qrcode"></i> Scan QR
+      </button>
+    </div>
+
+    <div id="id-panel" class="pay-panel active">
+      <form method="POST" action="{% url 'save_upi' %}" class="native-form">
+        {% csrf_token %}
+        
+        <div class="input-group">
+          <label for="upi_id">Your UPI ID</label>
+          <input 
+            type="text" 
+            id="upi_id" 
+            name="upi_id" 
+            placeholder="example@ybl or 9876543210@ybl"
+            required
+          />
+        </div>
+
+        <div class="help-box">
+          <i class="fa-solid fa-circle-info"></i>
+          <p><strong>Quick Guide:</strong> Open PhonePe or GPay &rarr; Go to your Profile Dashboard &rarr; Copy your primary dynamic UPI ID string and paste it here.</p>
+        </div>
+
+        <button type="submit" class="btn-action-pay">
+          Save & Continue <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+    </div>
+
+    <div id="qr-panel" class="pay-panel">
+      <div class="qr-container">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=newsportal@bank" alt="Payment QR Code" class="qr-img">
+      </div>
+      
+      <div class="help-box" style="margin-bottom: 20px;">
+        <i class="fa-solid fa-qrcode"></i>
+        <p style="text-align: center; width: 100%;">Scan this dynamic QR Code using any banking application to initialize instant premium settlement.</p>
+      </div>
+
+      <button type="button" class="btn-action-pay" onclick="simulateCameraScan()">
+        <i class="fa-solid fa-camera"></i> Open Camera to Scan QR
+      </button>
+
+      <form method="POST" action="{% url 'payment_success' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-action-pay btn-secondary-action">
+          I have made the payment &rarr;
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function switchPayTab(panelId, buttonElement) {
+    // Hide all panels
+    document.querySelectorAll('.pay-panel').forEach(panel => {
+      panel.classList.remove('active');
+    });
+    // Deactivate all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    
+    // Activate clicked elements
+    document.getElementById(panelId).classList.add('active');
+    buttonElement.classList.add('active');
+  }
+
+  function simulateCameraScan() {
+    alert("Camera interface initialized! In a production environment, this triggers a native WebRTC scanner to process the matrix barcode automatically.");
+  }
+</script>
+{% endblock %}

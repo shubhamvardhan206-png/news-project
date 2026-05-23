@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-5">
+  <div class="card shadow mx-auto" style="max-width: 800px; border-radius:15px;">
+    <div class="card-body p-4">
+
+      <h4 class="mb-3">🔍 Search Results
+        {% if query %}for: <strong>{{ query }}</strong>{% endif %}
+      </h4>
+
+      <!-- Search Form -->
+      <form method="get" action="{% url 'search' %}">
+        <div class="input-group mb-4">
+          <input 
+            type="text" 
+            name="query" 
+            class="form-control form-control-lg" 
+            placeholder="Search articles..." 
+            value="{{ query }}"
+          >
+          <button type="submit" class="btn btn-danger">Search</button>
+        </div>
+      </form>
+
+      <!-- Results -->
+      {% if articles %}
+        {% for article in articles %}
+          <div class="mb-3 border-bottom pb-3">
+            <a href="{% url 'article_detail' article.slug %}" 
+               class="text-decoration-none text-dark">
+              <h5>{{ article.title }}</h5>
+            </a>
+            <p class="text-muted small">
+              {{ article.category }} • {{ article.published_at|date:"d M Y" }}
+            </p>
+            <p>{{ article.content|truncatewords:25 }}</p>
+          </div>
+        {% endfor %}
+      {% elif query %}
+        <div class="text-center py-4">
+          <h5 class="text-muted">No results found for "{{ query }}"</h5>
+          <p class="text-muted">Try different keywords</p>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

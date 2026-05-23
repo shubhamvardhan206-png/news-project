@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}NewsPortal{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0d0d0d;
+      --paper: #faf8f4;
+      --accent: #c0392b;
+      --accent2: #e67e22;
+      --muted: #8a8378;
+      --border: #e2ddd6;
+      --card-bg: #ffffff;
+      --nav-bg: #0d0d0d;
+      --serif: 'Fraunces', Georgia, serif;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; height: auto; display: block; }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--nav-bg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 3px solid var(--accent);
+    }
+    .nav-inner {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav-brand {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .nav-brand span { color: var(--accent); }
+    
+    /* ── TICKER ── */
+    .ticker {
+      background: var(--accent);
+      color: #fff;
+      padding: 6px 0;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker-inner {
+      display: inline-block;
+      animation: ticker-scroll 30s linear infinite;
+    }
+    .ticker-inner:hover { animation-play-state: paused; }
+    .ticker-label {
+      background: #fff;
+      color: var(--accent);
+      padding: 1px 10px;
+      border-radius: 2px;
+      margin-right: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+    @keyframes ticker-scroll {
+      0% { transform: translateX(100vw); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* ── MESSAGES ── */
+    .messages-bar { max-width: 1300px; margin: 12px auto 0; padding: 0 24px; }
+    .alert {
+      padding: 12px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+    .alert-error   { background: #f8d7da; color: #721c24; border-left: 4px solid var(--accent); }
+    .alert-info    { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+    .alert-warning { background: #fff3cd; color: #856404; border-left: 4px solid var(--accent2); }
+
+    /* ── MAIN CONTAINER ── */
+    .site-main { max-width: 1400px; margin: 0 auto; padding: 24px 20px 60px; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--nav-bg);
+      color: #888;
+      padding: 40px 24px 24px;
+      margin-top: 60px;
+    }
+    .footer-inner {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px;
+    }
+    .footer-brand { font-family: var(--serif); font-size: 22px; color: #fff; font-weight: 800; }
+    .footer-brand span { color: var(--accent); }
+    .footer-desc { margin-top: 10px; font-size: 13px; line-height: 1.7; }
+    .footer-heading { color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 14px; }
+    .footer-links { list-style: none; }
+    .footer-links li { margin-bottom: 8px; }
+    .footer-links a { font-size: 13px; color: #888; transition: color 0.2s; }
+    .footer-links a:hover { color: #fff; }
+    .footer-bottom {
+      max-width: 1300px;
+      margin: 30px auto 0;
+      padding-top: 20px;
+      border-top: 1px solid #222;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── MOBILE NAV ── */
+    .hamburger { display: none; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+    .mobile-menu {
+      display: none;
+      background: #111;
+      padding: 12px 24px;
+    }
+    .mobile-menu a {
+      display: block;
+      color: #ccc;
+      padding: 10px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #222;
+    }
+    .mobile-menu a:last-child { border-bottom: none; }
+
+    @media (max-width: 992px) {
+      .desktop-nav-links, .desktop-search { display: none !important; }
+      .hamburger { display: block !important; }
+      .mobile-menu.open { display: block; }
+      .footer-inner { grid-template-columns: 1fr; gap: 24px; }
+    }
+    @media (max-width: 600px) {
+      .site-main { padding: 20px 16px 40px; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav style="background:#1a1a2e; padding:0; position:sticky; top:0; z-index:1000; box-shadow:0 2px 10px rgba(0,0,0,0.3);">
+  <div style="max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:60px;">
+    
+    <a href="{% url 'home' %}" style="color:white; text-decoration:none; font-size:22px; font-weight:800; flex-shrink:0;">
+      News<span style="color:#e63946;">Portal</span>
+    </a>
+
+    <div class="desktop-nav-links" style="display:flex; gap:5px; align-items:center; flex-wrap:nowrap; overflow-x:auto; margin: 0 15px;">
+      <a href="{% url 'home' %}" style="color:#ccc; text-decoration:none; padding:5px 10px; font-size:13px; white-space:nowrap;">
+        Home
+      </a>
+      {% for cat in categories|slice:":6" %}
+      <a href="{% url 'category_articles' cat.slug %}" 
+         style="color:#ccc; text-decoration:none; padding:5px 10px; font-size:13px; white-space:nowrap;">
+        {{ cat.name }}
+      </a>
+      {% endfor %}
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+      
+      <!-- Header Social Icons (Hidden on Mobile) -->
+      <div class="desktop-nav-links" style="display:flex; align-items:center; gap:10px;">
+        <a href="https://twitter.com/newportal" target="_blank" rel="noopener noreferrer" title="Follow on Twitter" style="color:#ccc; font-size:16px; transition: color 0.3s;">
+          <i class="fab fa-twitter"></i>
+        </a>
+        <a href="https://facebook.com/newportal" target="_blank" rel="noopener noreferrer" title="Like on Facebook" style="color:#ccc; font-size:16px; transition: color 0.3s;">
+          <i class="fab fa-facebook-f"></i>
+        </a>
+        <a href="https://instagram.com/newportal" target="_blank" rel="noopener noreferrer" title="Follow on Instagram" style="color:#ccc; font-size:16px; transition: color 0.3s;">
+          <i class="fab fa-instagram"></i>
+        </a>
+      </div>
+
+      <form method="GET" action="{% url 'search' %}" class="desktop-search" style="display:flex; align-items:center; margin:0;">
+        <div style="display:flex; background:#2d2d44; border-radius:20px; overflow:hidden; border:1px solid #444;">
+          <input type="text" name="query" 
+                 placeholder="Search..." 
+                 value="{{ request.GET.query|default:'' }}"
+                 style="background:transparent; border:none; outline:none; color:white; padding:6px 12px; width:150px; font-size:13px;">
+          <button type="submit" 
+                  style="background:none; border:none; color:#ccc; padding:6px 10px; cursor:pointer;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </div>
+      </form>
+
+      <a href="{% url 'subscription_plans' %}" 
+         style="background:#FFD700; color:#000; text-decoration:none; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700; white-space:nowrap;">
+        ⭐ Subscribe
+      </a>
+
+      <div class="desktop-nav-links" style="display:flex; align-items:center; gap:8px;">
+        {% if user.is_authenticated %}
+          {% if user.is_staff %}
+          <a href="{% url 'admin_dashboard' %}" 
+             style="color:#ccc; text-decoration:none; padding:6px 10px; font-size:13px; white-space:nowrap;">
+            Dashboard
+          </a>
+          {% endif %}
+          <a href="{% url 'logout' %}" 
+             style="background:#e63946; color:white; text-decoration:none; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; white-space:nowrap;">
+            Logout
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}" 
+             style="background:#e63946; color:white; text-decoration:none; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; white-space:nowrap;">
+            Login
+          </a>
+        {% endif %}
+      </div>
+
+      <button class="hamburger" onclick="toggleMenu()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+    </div>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="{% url 'home' %}">Home</a>
+  <div style="padding: 8px 0;">
+    <form method="GET" action="{% url 'search' %}" style="display:flex; background:#2d2d44; border-radius:20px; border:1px solid #444; width:100%;">
+      <input type="text" name="query" placeholder="Search..." style="background:transparent; border:none; outline:none; color:white; padding:6px 12px; width:100%; font-size:13px;">
+      <button type="submit" style="background:none; border:none; color:#ccc; padding:6px 12px;"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </form>
+  </div>
+  {% if user.is_authenticated %}
+    {% if user.is_staff %}<a href="{% url 'admin_dashboard' %}">Dashboard</a>{% endif %}
+    <a href="{% url 'logout' %}">Logout</a>
+  {% else %}
+    <a href="{% url 'login' %}">Sign In</a>
+    <a href="{% url 'register' %}">Register</a>
+  {% endif %}
+</div>
+
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-label">LIVE</span>
+    Breaking news &bull; Stay informed with the latest stories from around the world &bull; Politics &bull; Technology &bull; Sports &bull; Entertainment &bull; Science &bull; Business &bull;
+  </div>
+</div>
+
+<div style="max-width:1400px; margin:10px auto; padding:0 20px; text-align:center;">
+  {% include 'ads/ad_banner.html' %}
+</div>
+
+{% if messages %}
+  <div class="messages-bar">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<main class="site-main">
+  <div class="container-fluid p-0">
+    <div class="row g-4">
+      
+      <div class="col-lg-9 col-12">
+        {% block content %}{% endblock %}
+      </div>
+
+      <div class="col-lg-3 col-12 d-none d-lg-block" style="position: sticky; top: 80px; height: fit-content;">
+        {% include 'ads/ad_sidebar.html' %}
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">News<span>Portal</span></div>
+      <p class="footer-desc">Your trusted source for breaking news, in-depth analysis, and stories that matter. Committed to accurate, independent journalism.</p>
+      
+      <!-- Social Media Links -->
+      <div style="margin-top: 20px;">
+        <div class="footer-heading" style="margin-bottom: 12px;">Follow Us</div>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <a href="https://twitter.com/newportal" target="_blank" rel="noopener noreferrer" 
+             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #1DA1F2; color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
+             title="Follow us on Twitter">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="https://facebook.com/newportal" target="_blank" rel="noopener noreferrer"
+             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #1877F2; color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
+             title="Like us on Facebook">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <a href="https://instagram.com/newportal" target="_blank" rel="noopener noreferrer"
+             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(45deg, #fd5949, #d6249f, #285AEB); color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
+             title="Follow us on Instagram">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://youtube.com/newportal" target="_blank" rel="noopener noreferrer"
+             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #FF0000; color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
+             title="Subscribe on YouTube">
+            <i class="fab fa-youtube"></i>
+          </a>
+          <a href="https://linkedin.com/company/newportal" target="_blank" rel="noopener noreferrer"
+             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #0A66C2; color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
+             title="Connect on LinkedIn">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div>
+      <div class="footer-heading">Sections</div>
+      <ul class="footer-links">
+        <li><a href="{% url 'home' %}">Home</a></li>
+        {% for cat in categories %}
+          <li><a href="{% url 'category_articles' cat.slug %}">{{ cat.name }}</a></li>
+        {% endfor %}
+      </ul>
+      
+      <div class="footer-heading" style="margin-top: 24px;">More</div>
+      <ul class="footer-links">
+        <li><a href="{% url 'subscription_plans' %}">Subscribe</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#contact">Contact Us</a></li>
+        <li><a href="#advertise">Advertise</a></li>
+      </ul>
+    </div>
+    
+    <div>
+      <div class="footer-heading">Account</div>
+      <ul class="footer-links">
+        {% if user.is_authenticated %}
+          <li><a href="{% url 'logout' %}">Logout</a></li>
+          {% if user.is_staff %}<li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>{% endif %}
+        {% else %}
+          <li><a href="{% url 'login' %}">Sign In</a></li>
+          <li><a href="{% url 'register' %}">Register</a></li>
+        {% endif %}
+        <li><a href="/admin/">Admin Panel</a></li>
+      </ul>
+      
+      <div class="footer-heading" style="margin-top: 24px;">Legal</div>
+      <ul class="footer-links">
+        <li><a href="#privacy">Privacy Policy</a></li>
+        <li><a href="#terms">Terms of Use</a></li>
+        <li><a href="#cookies">Cookie Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="footer-bottom">
+    <span>&copy; 2026 NewsPortal. All rights reserved.</span>
+    <span>Built with Django</span>
+  </div>
+</footer>
+
+<script>
+  function toggleMenu() {
+    document.getElementById('mobileMenu').classList.toggle('open');
+  }
+</script>
+{% block extra_js %}{% endblock %}
+<script>
+function show

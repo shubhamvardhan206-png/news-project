@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block title %}Subscribe — NewsPortal{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sub-hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: var(--ink);
+    border-radius: 16px;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .sub-hero::before {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    background: var(--accent);
+    border-radius: 50%;
+    top: -100px; right: -80px;
+    opacity: 0.12;
+  }
+  .sub-hero h1 { font-family: var(--serif); font-size: 42px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+  .sub-hero p { color: #aaa; font-size: 16px; max-width: 500px; margin: 0 auto; }
+
+  /* CURRENT PLAN BANNER */
+  .current-plan-banner {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: #fff;
+    padding: 16px 24px;
+    border-radius: 10px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .current-plan-icon { font-size: 28px; }
+
+  /* PLANS GRID */
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .plan-card {
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 28px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .plan-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.1); }
+  .plan-card.popular {
+    border-color: var(--accent);
+    box-shadow: 0 8px 30px rgba(192,57,43,0.15);
+  }
+  .popular-badge {
+    position: absolute;
+    top: -14px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 18px;
+    border-radius: 100px;
+  }
+  .plan-name { font-family: var(--serif); font-size: 24px; font-weight: 800; margin-bottom: 8px; color: var(--ink); }
+  .plan-price {
+    font-family: var(--serif);
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin: 16px 0 4px;
+  }
+  .plan-price sup { font-size: 24px; vertical-align: top; margin-top: 12px; display: inline-block; }
+  .plan-duration { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .plan-desc { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+  .plan-features { list-style: none; margin-bottom: 28px; text-align: left; }
+  .plan-features li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink);
+  }
+  .plan-features li:last-child { border-bottom: none; }
+  .plan-features li::before { content: '✓'; color: #27ae60; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+  .btn-subscribe {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-subscribe:hover { background: var(--accent); }
+  .plan-card.popular .btn-subscribe { background: var(--accent); }
+  .plan-card.popular .btn-subscribe:hover { background: #a93226; }
+  .btn-subscribe:active { transform: scale(0.98); }
+
+  /* FEATURES SECTION */
+  .features-section { margin-top: 64px; text-align: center; }
+  .features-title { font-family: var(--serif); font-size: 32px; font-weight: 800; margin-bottom: 40px; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+  .feature-item { padding: 24px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
+  .feature-icon { font-size: 36px; margin-bottom: 12px; }
+  .feature-name { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  @media (max-width: 600px) {
+    .sub-hero h1 { font-size: 28px; }
+    .plan-price { font-size: 44px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="sub-hero">
+  <h1>Subscribe to NewsPortal</h1>
+  <p>Get unlimited access to all articles, exclusive content, and an ad-free experience</p>
+</div>
+
+<!-- CURRENT PLAN (if subscribed) -->
+{% if user_sub %}
+  <div class="current-plan-banner">
+    <span class="current-plan-icon">🎉</span>
+    <div>
+      You are subscribed to <strong>{{ user_sub.plan.name }}</strong> —
+      expires on <strong>{{ user_sub.end_date|date:"M d, Y" }}</strong>
+    </div>
+  </div>
+{% endif %}
+
+<!-- PLANS -->
+<div class="plans-grid">
+  {% for plan in plans %}
+    <div class="plan-card {% if plan.is_popular %}popular{% endif %}">
+      {% if plan.is_popular %}<div class="popular-badge">Most Popular</div>{% endif %}
+
+      <div class="plan-name">{{ plan.name }}</div>
+      <div class="plan-price"><sup>₹</sup>{{ plan.price }}</div>
+      <div class="plan-duration">per {{ plan.duration_days }} days</div>
+
+      {% if plan.description %}
+        <div class="plan-desc">{{ plan.description }}</div>
+      {% endif %}
+
+      <ul class="plan-features">
+        {% for feature in plan.get_features_list %}
+          <li>{{ feature }}</li>
+        {% empty %}
+          <li>Full article access</li>
+          <li>No advertisements</li>
+          <li>Priority support</li>
+        {% endfor %}
+      </ul>
+
+      {% if user.is_authenticated %}
+        <a href="{% url 'subscribe' plan.id %}" class="btn-subscribe">
+          Subscribe Now →
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn-subscribe">
+          Login to Subscribe →
+        </a>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p style="text-align:center;color:var(--muted);grid-column:1/-1;padding:40px">
+      No subscription plans available yet. Check back soon!
+    </p>
+  {% endfor %}
+</div>
+
+<!-- WHY SUBSCRIBE -->
+<div class="features-section">
+  <h2 class="features-title">Why Subscribe?</h2>
+  <div class="features-grid">
+    <div class="feature-item">
+      <div class="feature-icon">📰</div>
+      <div class="feature-name">Unlimited Articles</div>
+      <div class="feature-desc">Read every article without any limits or paywalls</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">🚫</div>
+      <div class="feature-name">Ad-Free Experience</div>
+      <div class="feature-desc">Enjoy clean, distraction-free reading every time</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-name">Breaking News First</div>
+      <div class="feature-desc">Get notified about breaking stories before anyone else</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-name">Exclusive Content</div>
+      <div class="feature-desc">Access premium stories only for subscribers</div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

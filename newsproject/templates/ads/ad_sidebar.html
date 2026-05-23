@@ -1,0 +1,8 @@
+{% for ad in sidebar_ads %}
+<div class="ad-sidebar-card">
+  <p class="ad-tag">Sponsored</p>
+  <a href="{{ ad.url }}" target="_blank" rel="noopener">
+    <img src="{{ ad.image.url }}" alt="{{ ad.title }}">
+  </a>
+</div>
+{% endfor %}

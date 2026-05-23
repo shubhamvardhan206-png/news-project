@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Subscription — NewsPortal{% endblock %}
+
+{% block extra_head %}
+<style>
+  .confirm-wrap { max-width: 500px; margin: 60px auto; }
+  .confirm-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 44px 40px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  .confirm-icon { font-size: 56px; margin-bottom: 16px; }
+  .confirm-title { font-family: var(--serif); font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .confirm-plan { color: var(--accent); font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+  .confirm-detail {
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+  .confirm-row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .confirm-row:last-child { border-bottom: none; font-weight: 700; font-size: 16px; }
+  .confirm-row span:first-child { color: var(--muted); }
+  .btn-confirm {
+    display: block; width: 100%;
+    padding: 15px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: var(--sans); font-size: 16px; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.2s;
+    margin-bottom: 12px;
+  }
+  .btn-confirm:hover { background: #a93226; }
+  .btn-cancel {
+    display: block;
+    font-size: 13px; color: var(--muted);
+    text-align: center;
+  }
+  .btn-cancel:hover { color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirm-wrap">
+  <div class="confirm-card">
+    <div class="confirm-icon">🔐</div>
+    <div class="confirm-title">Confirm Subscription</div>
+    <div class="confirm-plan">{{ plan.name }}</div>
+
+    <div class="confirm-detail">
+      <div class="confirm-row">
+        <span>Plan</span>
+        <span>{{ plan.name }}</span>
+      </div>
+      <div class="confirm-row">
+        <span>Duration</span>
+        <span>{{ plan.duration_days }} days</span>
+      </div>
+      <div class="confirm-row">
+        <span>Amount</span>
+        <span>₹{{ plan.price }}</span>
+      </div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn-confirm">
+        ✅ Confirm & Subscribe — ₹{{ plan.price }}
+      </button>
+    </form>
+    <a href="{% url 'subscription_plans' %}" class="btn-cancel">← Go back to plans</a>
+  </div>
+</div>
+{% endblock %}

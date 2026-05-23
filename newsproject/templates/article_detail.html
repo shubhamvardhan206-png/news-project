@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+{% block title %}{{ article.title }} — NewsPortal{% endblock %}
+
+{% block extra_head %}
+<style>
+  .article-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 56px;
+    align-items: start;
+  }
+
+  /* BREADCRUMB */
+  .breadcrumb {
+    display: flex; gap: 8px; align-items: center;
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .breadcrumb a { color: var(--accent); }
+  .breadcrumb span { color: var(--border); }
+
+  /* ARTICLE HEADER */
+  .article-header { margin-bottom: 28px; }
+  .article-category {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 12px;
+    border-radius: 3px;
+    margin-bottom: 14px;
+  }
+  .article-title {
+    font-family: var(--serif);
+    font-size: clamp(26px, 4vw, 42px);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+  .article-summary {
+    font-size: 18px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-style: italic;
+    margin-bottom: 20px;
+    font-family: var(--serif);
+    font-weight: 300;
+  }
+  .article-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+  .article-meta-author {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .author-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--border);
+  }
+  .author-name { font-weight: 600; color: var(--ink); font-size: 14px; }
+  .meta-divider { color: var(--border); }
+  .stat-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--paper); border: 1px solid var(--border);
+    border-radius: 100px; padding: 4px 12px; font-size: 12px;
+  }
+
+  /* HERO IMAGE */
+  .article-hero-img {
+    width: 100%; max-height: 480px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 36px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+
+  /* CONTENT */
+  .article-content {
+    font-size: 17px;
+    line-height: 1.85;
+    color: #1a1a1a;
+  }
+  .article-content p { margin-bottom: 1.4em; }
+  .article-content h2 {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 800;
+    margin: 2em 0 0.6em;
+    color: var(--ink);
+  }
+  .article-content h3 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 1.5em 0 0.5em;
+  }
+  .article-content blockquote {
+    border-left: 4px solid var(--accent);
+    margin: 1.5em 0;
+    padding: 12px 24px;
+    background: rgba(192,57,43,0.05);
+    font-family: var(--serif);
+    font-size: 20px;
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  /* LIKE BUTTON */
+  .like-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 36px 0;
+    padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .like-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 24px;
+    background: {% if liked %}var(--accent){% else %}transparent{% endif %};
+    color: {% if liked %}#fff{% else %}var(--ink){% endif %};
+    border: 2px solid {% if liked %}var(--accent){% else %}var(--border){% endif %};
+    border-radius: 100px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .like-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    transform: scale(1.04);
+  }
+  .like-count { font-family: var(--serif); font-size: 32px; font-weight: 800; color: var(--accent); }
+  .like-label { font-size: 12px; color: var(--muted); }
+
+  /* TAGS / SHARE */
+  .article-footer-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 20px 0;
+    border-top: 2px solid var(--ink);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  /* COMMENTS */
+  .comments-section { margin-top: 48px; }
+  .comments-title {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .comment-form textarea {
+    width: 100%;
+    padding: 14px 16px;
+    font-family: var(--sans);
+    font-size: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    resize: vertical;
+    min-height: 100px;
+    background: var(--card-bg);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .comment-form textarea:focus { border-color: var(--accent); }
+  .btn-comment {
+    margin-top: 10px;
+    padding: 12px 28px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-comment:hover { background: var(--accent); }
+  .login-to-comment {
+    padding: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .login-to-comment a { color: var(--accent); font-weight: 600; }
+  .comment-list { margin-top: 24px; }
+  .comment-item {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .comment-item:last-child { border-bottom: none; }
+  .comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .comment-author { font-weight: 600; font-size: 14px; }
+  .comment-date { font-size: 12px; color: var(--muted); }
+  .comment-content { font-size: 14px; line-height: 1.7; color: #333; }
+
+  /* SIDEBAR */
+  .detail-sidebar { position: sticky; top: 80px; }
+  .sidebar-widget { margin-bottom: 32px; }
+  .sidebar-widget-title {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 800;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-widget-title::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--accent);
+    display: inline-block;
+    border-radius: 2px;
+  }
+
+  .related-card {
+    display: flex; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    transition: opacity 0.2s;
+  }
+  .related-card:hover { opacity: 0.8; }
+  .related-card:last-child { border-bottom: none; }
+  .related-card-img {
+    width: 70px; height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background: var(--border);
+  }
+  .related-card-title {
+    font-family: var(--serif);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .related-card-date { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  @media (max-width: 900px) {
+    .article-layout { grid-template-columns: 1fr; }
+    .detail-sidebar { position: static; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{% url 'home' %}">Home</a>
+  <span>›</span>
+  {% if article.category %}
+    <a href="{% url 'category' article.category.slug %}">{{ article.category.name }}</a>
+    <span>›</span>
+  {% endif %}
+  <span>{{ article.title|truncatechars:40 }}</span>
+</div>
+
+<div class="article-layout">
+  <!-- MAIN ARTICLE -->
+  <article>
+    <div class="article-header">
+      {% if article.category %}
+        <a href="{% url 'category' article.category.slug %}" class="article-category">{{ article.category.name }}</a>
+      {% endif %}
+      <h1 class="article-title">{{ article.title }}</h1>
+      {% if article.summary %}
+        <p class="article-summary">{{ article.summary }}</p>
+      {% endif %}
+      <div class="article-meta">
+        <div class="article-meta-author">
+          {% if article.author %}
+            {% if article.author.avatar %}
+              <img src="{{ article.author.avatar.url }}" class="author-avatar" alt="{{ article.author.name }}" />
+            {% else %}
+              <div class="author-avatar" style="background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;">
+                {{ article.author.name|slice:":1"|upper }}
+              </div>
+            {% endif %}
+            <div>
+              <a href="{% url 'author_profile' article.author.id %}" class="author-name">{{ article.author.name }}</a>
+            </div>
+          {% else %}
+            <div class="author-name">Staff Reporter</div>
+          {% endif %}
+        </div>
+        <span class="meta-divider">|</span>
+        <span>{{ article.published_at|date:"F d, Y" }}</span>
+        <span class="meta-divider">|</span>
+        <span class="stat-pill">&#128065; {{ article.views }} views</span>
+        <span class="stat-pill">&#128172; {{ comments|length }}</span>
+        <span class="stat-pill">&#10084; <span id="like-count-display">{{ like_count }}</span></span>
+      </div>
+    </div>
+
+    {% if article.image %}
+      <img src="{{ article.image.url }}" alt="{{ article.title }}" class="article-hero-img" />
+    {% endif %}
+
+    <div class="article-content">
+      {{ article.content|linebreaks }}
+    </div>
+
+    <!-- LIKE -->
+    <div class="like-section">
+      <!-- Yahan paste karo like button -->
+{% if user.is_authenticated %}
+<button id="like-btn" 
+        onclick="toggleLike('{{ article.slug }}')"
+        style="background:{% if liked %}#e63946{% else %}#fff{% endif %};
+               color:{% if liked %}#fff{% else %}#e63946{% endif %};
+               border:2px solid #e63946;
+               padding:8px 20px;
+               border-radius:20px;
+               cursor:pointer;
+               font-weight:600;">
+  ❤️ <span id="like-count">{{ like_count }}</span> Likes
+</button>
+{% else %}
+<a href="{% url 'login' %}"
+   style="background:#e63946; color:#fff; padding:8px 20px;
+          border-radius:20px; text-decoration:none;">
+  Login to Like ❤️
+</a>
+{% endif %}
+      <div>
+        <div class="like-count" id="likeCountBig">{{ like_count }}</div>
+        <div class="like-label">people liked this</div>
+      </div>
+    </div>
+
+    <!-- SOCIAL SHARE SECTION -->
+    <div style="margin: 36px 0; padding: 24px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;">
+      <h3 style="font-family: var(--serif); font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--ink);">
+        Share this article
+      </h3>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <!-- Twitter Share -->
+        <a href="https://twitter.com/intent/tweet?text={{ article.title|urlencode }}&url={{ request.build_absolute_uri }}&via=newportal" 
+           target="_blank" rel="noopener noreferrer"
+           style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #1DA1F2; color: white; border-radius: 6px; transition: all 0.3s; text-decoration: none; font-size: 18px;"
+           title="Share on Twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+
+        <!-- Facebook Share -->
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" 
+           target="_blank" rel="noopener noreferrer"
+           style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #1877F2; color: white; border-radius: 6px; transition: all 0.3s; text-decoration: none; font-size: 18px;"
+           title="Share on Facebook">
+          <i class="fab fa-facebook-f"></i>
+        </a>
+
+        <!-- LinkedIn Share -->
+        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri }}" 
+           target="_blank" rel="noopener noreferrer"
+           style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #0A66C2; color: white; border-radius: 6px; transition: all 0.3s; text-decoration: none; font-size: 18px;"
+           title="Share on LinkedIn">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+
+        <!-- WhatsApp Share -->
+        <a href="https://wa.me/?text={{ article.title|urlencode }}%20{{ request.build_absolute_uri }}" 
+           target="_blank" rel="noopener noreferrer"
+           style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #25D366; color: white; border-radius: 6px; transition: all 0.3s; text-decoration: none; font-size: 18px;"
+           title="Share on WhatsApp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+
+        <!-- Email Share -->
+        <a href="mailto:?subject={{ article.title|urlencode }}&body={{ article.summary|urlencode }}%20{{ request.build_absolute_uri }}" 
+           style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #EA4335; color: white; border-radius: 6px; transition: all 0.3s; text-decoration: none; font-size: 18px;"
+           title="Share via Email">
+          <i class="fas fa-envelope"></i>
+        </a>
+
+        <!-- Copy Link -->
+        <button onclick="copyToClipboard('{{ request.build_absolute_uri }}')" 
+                style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #95989A; color: white; border-radius: 6px; border: none; cursor: pointer; transition: all 0.3s; font-size: 18px;"
+                title="Copy link">
+          <i class="fas fa-link"></i>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Link copied to clipboard!');
+        });
+      }
+    </script>
+    <section class="comments-section">
+      <div class="comments-title">{{ comments|length }} Comment{{ comments|length|pluralize }}</div>
+
+      {% if user.is_authenticated %}
+        <form class="comment-form" method="post" action="{% url 'add_comment' article.slug %}">
+          {% csrf_token %}
+          <textarea name="content" placeholder="Share your thoughts on this article..."></textarea>
+          <button class="btn-comment" type="submit">Post Comment</button>
+        </form>
+      {% else %}
+        <div class="login-to-comment">
+          <a href="{% url 'login' %}">Sign in</a> to leave a comment.
+        </div>
+      {% endif %}
+
+      <div class="comment-list">
+        {% for comment in comments %}
+          <div class="comment-item">
+            <div class="comment-header">
+              <span class="comment-author">@{{ comment.user.username }}</span>
+              <span class="comment-date">{{ comment.created_at|date:"M d, Y · g:i a" }}</span>
+            </div>
+            <div class="comment-content">{{ comment.content }}</div>
+          </div>
+        {% empty %}
+          <p style="color:var(--muted);font-size:14px;text-align:center;padding:24px 0">Be the first to comment!</p>
+        {% endfor %}
+      </div>
+    </section>
+  </article>
+
+  <!-- SIDEBAR -->
+  <aside class="detail-sidebar">
+    {% if related %}
+    <div class="sidebar-widget">
+      <div class="sidebar-widget-title">Related Stories</div>
+      {% for art in related %}
+        <a href="{% url 'article_detail' art.slug %}" class="related-card">
+          {% if art.image %}
+            <img src="{{ art.image.url }}" class="related-card-img" alt="{{ art.title }}" />
+          {% else %}
+            <div class="related-card-img" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:24px;">&#128241;</div>
+          {% endif %}
+          <div>
+            <div class="related-card-title">{{ art.title }}</div>
+            <div class="related-card-date">{{ art.published_at|date:"M d, Y" }}</div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="sidebar-widget">
+      <div class="sidebar-widget-title">About the Author</div>
+      {% if article.author %}
+        <div style="text-align:center;padding:16px">
+          {% if article.author.avatar %}
+            <img src="{{ article.author.avatar.url }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 12px;" />
+          {% else %}
+            <div style="width:80px;height:80px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-size:32px;font-weight:800;margin:0 auto 12px;">{{ article.author.name|slice:":1"|upper }}</div>
+          {% endif %}
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px">{{ article.author.name }}</div>
+          {% if article.author.bio %}
+            <p style="font-size:13px;color:var(--muted);line-height:1.6">{{ article.author.bio|truncatewords:30 }}</p>
+          {% endif %}
+          <a href="{% url 'author_profile' article.author.id %}" style="display:inline-block;margin-top:12px;font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px">View Profile →</a>
+        </div>
+      {% else %}
+        <p style="font-size:13px;color:var(--muted)">NewsPortal Staff</p>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const slug = '{{ article.slug }}';
+  let liked = {{ liked|yesno:"true,false" }};
+
+ async function toggleLike() {
+    const res = await fetch(`/article/${slug}/like/`, {
+        method: 'POST',        // ← GET ko POST se replace karo
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    });
+    const data = await res.json();
+    liked = data.liked;
+    document.getElementById('likeHeart').textContent = liked ? '❤️' : '🤍';
+    document.getElementById('likeBtnText').textContent = liked ? 'Liked' : 'Like';
+    document.getElementById('like-count-display').textContent = data.count;
+    document.getElementById('likeCountBig').textContent = data.count;
+    const btn = document.getElementById('likeBtn');
+    btn.style.background = liked ? 'var(--accent)' : 'transparent';
+    btn.style.color = liked ? '#fff' : 'var(--ink)';
+    btn.style.borderColor = liked ? 'var(--accent)' : 'var(--border)';
+  }
+</script>
+{% endblock %}

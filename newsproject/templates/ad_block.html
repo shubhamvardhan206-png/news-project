@@ -1,0 +1,22 @@
+{% if ad %}
+<div class="ad-container" style="margin:20px 0;text-align:center;">
+  {% if ad.ad_code %}
+    {{ ad.ad_code|safe }}
+  {% elif ad.video %}
+    <a href="{% url 'ad_click' ad.id %}" target="_blank" style="display:block">
+      <video autoplay muted loop playsinline
+        style="max-width:100%;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1)">
+        <source src="{{ ad.video.url }}" type="video/mp4">
+      </video>
+    </a>
+  {% elif ad.image %}
+    <a href="{% url 'ad_click' ad.id %}" target="_blank">
+      <img src="{{ ad.image.url }}" alt="{{ ad.title }}"
+        style="max-width:100%;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1)" />
+    </a>
+  {% endif %}
+  <div style="font-size:10px;color:#bbb;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px">
+    Advertisement
+  </div>
+</div>
+{% endif %}

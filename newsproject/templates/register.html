@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Account — NewsPortal{% endblock %}
+
+{% block content %}
+<style>
+  /* CENTRAL PAGE WRAPPER */
+  .np-register-page {
+    background-color: #121212 !important; 
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  /* CENTRAL CARD */
+  .register-card {
+    background: #121212;
+    background: linear-gradient(rgba(255,255,255,0.02), rgba(255,255,255,0.02)), #121212;
+    width: 100%;
+    max-width: 480px;
+    padding: 50px 50px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  }
+
+  /* HEADER */
+  .brand-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .register-card h1 {
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0 0 8px 0;
+  }
+
+  .register-card .subtitle {
+    color: #a7a7a7;
+    font-size: 16px;
+    margin: 0;
+  }
+
+  /* FORM STYLING */
+  .native-form {
+    width: 100%;
+  }
+
+  .input-wrapper {
+    display: flex;
+    flex-direction: column; 
+    gap: 8px;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .input-wrapper label {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* Targeting both manual inputs and Django form inputs */
+  .input-wrapper input {
+    width: 100%;
+    padding: 14px;
+    background-color: #242424;
+    border: 1px solid #727272;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+
+  .input-wrapper input:focus {
+    outline: none;
+    border: 2px solid #ffffff;
+    padding: 13px; 
+    background-color: #2a2a2a;
+  }
+
+  /* REGISTRATION BUTTON (Matching Spotify Green) */
+  .btn-primary-submit {
+    width: 100%;
+    padding: 15px;
+    background-color: #1ed760; 
+    color: #000000;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 15px;
+  }
+
+  .btn-primary-submit:hover {
+    background-color: #21e065;
+    transform: scale(1.02);
+  }
+
+  /* FOOTER LINKS */
+  .form-footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 14px;
+    color: #a7a7a7;
+  }
+
+  .form-footer a {
+    color: #ffffff;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  .form-footer a:hover {
+    color: #1ed760;
+  }
+
+  .alert-message {
+    width: 100%;
+    padding: 12px;
+    background-color: #e91429;
+    color: #ffffff;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 480px) {
+    .register-card {
+      padding: 40px 24px;
+      background: transparent;
+      box-shadow: none;
+    }
+    .register-card h1 {
+      font-size: 26px;
+    }
+  }
+</style>
+
+<div class="np-register-page">
+  <div class="register-card">
+    
+    <div class="brand-header">
+      <h1>Create Account</h1>
+      <p class="subtitle">Join NewsPortal today</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert-message">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'register' %}" class="native-form">
+      {% csrf_token %}
+      
+      <div class="input-wrapper">
+        <label for="id_username">Username</label>
+        <input 
+          type="text" 
+          id="id_username" 
+          name="username" 
+          placeholder="Choose a username"
+          required
+        />
+      </div>
+
+      <div class="input-wrapper">
+        <label for="id_password">Password</label>
+        <input 
+          type="password" 
+          id="id_password" 
+          name="password" 
+          placeholder="Create a strong password"
+          required
+        />
+      </div>
+
+      <div class="input-wrapper">
+        <label for="id_password_confirm">Password confirmation</label>
+        <input 
+          type="password" 
+          id="id_password_confirm" 
+          name="password_confirm" 
+          placeholder="Repeat your password"
+          required
+        />
+      </div>
+
+      <button type="submit" class="btn-primary-submit">Register &rarr;</button>
+    </form>
+
+    <div class="form-footer">
+      Already have an account? <a href="{% url 'login' %}">Login here</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

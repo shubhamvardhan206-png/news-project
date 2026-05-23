@@ -1,0 +1,162 @@
+import os
+from pathlib import Path
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-p4we%u-^u(z(bphy7qdr!or7fc0%p(vw+e*b*trod9r$mnt8nk')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*.onrender.com']
+
+
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    
+    # Django-allauth required core apps
+    'django.contrib.sites', 
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    
+    # Social Providers
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+    
+    # Your local app
+    'news',
+]
+
+# Required setting for django.contrib.sites used by allauth
+SITE_ID = 2
+
+# Authentication backends tell Django to check both regular users and social logins
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    # Account middleware required by newer versions of allauth
+    'allauth.account.middleware.AccountMiddleware',
+]
+
+ROOT_URLCONF = 'newsproject.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'], 
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'news.context_processors.common_data',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'newsproject.wsgi.application'
+
+
+# Database
+# https://docs.djangoproject.com/en/stable/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# For production (Render will set these env vars)
+if not DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'news_db'),
+            'USER': os.getenv('DB_USER', 'newsproject_user'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', ''),
+            'PORT': '5432',
+        }
+    }
+
+
+# Password validation
+# https://docs.djangoproject.com/en/stable/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/stable/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# --- Login & Allauth configurations ---
+
+LOGIN_URL = '/login/'
+
+# FIXED: Ab login/register karte hi user seedhe dashboard par redirect hoga
+LOGIN_REDIRECT_URL = 'admin_dashboard'  
+
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+
+# Shortcuts for smooth allauth behavior on local machine
+ACCOUNT_EMAIL_VERIFICATION = "none"  # Skips mandatory email validation steps
+SOCIALACCOUNT_LOGIN_ON_GET = True   # Skips intermediate confirmation page for social accounts
+
+
+# News API Key
+NEWS_API_KEY = '83fad5e997474c6aa8705aad5edb636d'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Security settings for production
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
