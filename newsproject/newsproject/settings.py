@@ -8,9 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-p4we%u-^u(z(bphy7qdr!or7fc0%p(vw+e*b*trod9r$mnt8nk')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+# Default to local development mode unless DEBUG is explicitly set to False.
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*.onrender.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*.onrender.com', '*.pythonanywhere.com']
 
 
 # Application definition
@@ -84,23 +85,22 @@ WSGI_APPLICATION = 'newsproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/stable/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Check if DATABASE_URL is set (Render/Production)
+if os.getenv('DATABASE_URL'):
+    # Production: Use PostgreSQL via DATABASE_URL
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600
+        )
     }
-}
-
-# For production (Render will set these env vars)
-if not DEBUG:
+else:
+    # Development: Use SQLite (no PostgreSQL needed!)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'news_db'),
-            'USER': os.getenv('DB_USER', 'newsproject_user'),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', ''),
-            'PORT': '5432',
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
@@ -156,7 +156,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Security settings for production
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
+# SSL/HTTPS settings - ONLY in production (not DEBUG mode)
+SECURE_SSL_REDIRECT = False  # Disabled for local development
+SESSION_COOKIE_SECURE = False  # Allow cookies over HTTP locally
+CSRF_COOKIE_SECURE = False  # Allow CSRF over HTTP locally
+SECURE_HSTS_SECONDS = 0  # No HSTS on local dev
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+
+# Enable SSL only in production (Render)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
