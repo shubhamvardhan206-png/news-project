@@ -44,7 +44,7 @@ def get_ads(position):
 
 
 def get_news_from_api(category=None):
-    """Fetch news from NewsAPI"""
+    """Fetch news from NewsAPI with category filtering"""
     cache_key = f'news_api_{category or "all"}'
     cached = cache.get(cache_key)
     if cached:
@@ -53,6 +53,7 @@ def get_news_from_api(category=None):
     api_key = settings.NEWS_API_KEY
     all_articles = []
 
+    # Map database category slugs to NewsAPI categories
     category_map = {
         'technology': 'technology',
         'sports': 'sports',
@@ -60,17 +61,21 @@ def get_news_from_api(category=None):
         'entertainment': 'entertainment',
         'health': 'health',
         'science': 'science',
-        'politics': 'general',
-        'world': 'general',
+        'politics': 'politics',
+        'world': 'world',
+        'india': 'india',
+        'general': 'general',
     }
 
-    news_category = category_map.get(category, 'general') if category else 'general'
+    # If category is provided and in map, use it; otherwise use general
+    news_category = category_map.get(category, category if category else 'general')
 
     try:
-        # India News
+        # India News with category query
+        india_query = f'{news_category} India' if news_category != 'india' else 'India'
         r1 = requests.get('https://newsapi.org/v2/everything', params={
             'apiKey': api_key,
-            'q': f'{news_category} India',
+            'q': india_query,
             'language': 'en',
             'sortBy': 'publishedAt',
             'pageSize': 6,
@@ -81,10 +86,11 @@ def get_news_from_api(category=None):
                 article['source_region'] = '🇮🇳 India'
             all_articles += data1['articles']
 
-        # World News
+        # World News with category query
+        world_query = news_category if news_category not in ['india', 'general'] else 'international'
         r2 = requests.get('https://newsapi.org/v2/everything', params={
             'apiKey': api_key,
-            'q': news_category,
+            'q': world_query,
             'language': 'en',
             'sortBy': 'publishedAt',
             'pageSize': 6,
@@ -95,11 +101,12 @@ def get_news_from_api(category=None):
                 article['source_region'] = '🌍 World'
             all_articles += data2['articles']
 
+        # Cache for 30 minutes
         cache.set(cache_key, all_articles, 60 * 30)
         return all_articles
 
     except Exception as e:
-        print("API ERROR:", e)
+        print(f"API ERROR for category '{category}': {e}")
         return []
 
 
@@ -109,9 +116,9 @@ def get_news_from_api(category=None):
 
 def home(request):
     """Home page with articles and filters"""
-    articles = Article.objects.all()
+    articles = Article.objects.filter(is_published=True)
     categories = Category.objects.all()
-    
+
     query = request.GET.get('query', '')
     category_slug = request.GET.get('category', '')
 
@@ -126,8 +133,14 @@ def home(request):
 
     api_news = get_news_from_api(category=category_slug if category_slug else None)
     featured = articles.first()
-    trending = Article.objects.filter(is_published=True).order_by('-views')[:5]
-    latest = articles[:12]
+
+    # Get trending articles, filtered by category if selected
+    if category_slug:
+        trending = articles.order_by('-views')[:5]
+    else:
+        trending = Article.objects.filter(is_published=True).order_by('-views')[:5]
+
+    latest = articles.order_by('-created_at')[:12]
     banner_ads = Advertisement.objects.filter(position='banner_top', is_active=True)
     sidebar_ads = Advertisement.objects.filter(position='sidebar', is_active=True)
 
