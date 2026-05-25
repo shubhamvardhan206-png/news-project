@@ -751,9 +751,9 @@ def admin_payment_history(request):
     # Apply period filter
     payments = TransactionManager.filter_transactions(payments, period)
 
-    # Statistics for all time
-    total_payments = all_payments.count()
-    completed_payments = all_payments.filter(status='completed')
+    # Statistics for selected period (not all time)
+    total_payments = payments.count()
+    completed_payments = payments.filter(status='completed')
     total_revenue = sum([p.final_amount for p in completed_payments])
     total_discount = sum([p.discount_amount for p in completed_payments])
     avg_payment = total_revenue / len(completed_payments) if completed_payments else 0
@@ -770,15 +770,17 @@ def admin_payment_history(request):
             'display_name': TransactionManager.get_period_display(p),
         }
 
-    # Coupon usage stats
-    coupon_stats = Coupon.objects.annotate(
+    # Coupon usage stats (period-specific)
+    coupon_stats = Coupon.objects.filter(
+        payment__in=payments
+    ).annotate(
         usage_count=models.Count('payment'),
         total_discount=models.Sum('payment__discount_amount')
     ).order_by('-usage_count')[:10]
 
-    # Payment method breakdown
+    # Payment method breakdown (period-specific)
     from django.db.models import Count, Sum
-    method_stats = Payment.objects.filter(status='completed').values(
+    method_stats = payments.filter(status='completed').values(
         'payment_method'
     ).annotate(
         count=Count('id'),
