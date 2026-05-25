@@ -147,6 +147,37 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 # Shortcuts for smooth allauth behavior on local machine
 ACCOUNT_EMAIL_VERIFICATION = "none"  # Skips mandatory email validation steps
 SOCIALACCOUNT_LOGIN_ON_GET = True   # Skips intermediate confirmation page for social accounts
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# Social Account Providers Configuration
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'email',
+            'name',
+            'picture',
+            'verified'
+        ],
+        'EXCHANGE_TOKEN': True,
+        'VERIFIED_EMAIL': True,
+        'VERSION': 'v13.0',
+    }
+}
 
 
 # News API Key

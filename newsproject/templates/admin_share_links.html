@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <h2>📤 Generate Shareable Payment Links</h2>
+    <p class="text-muted">Copy and share these links with users to let them subscribe with coupons</p>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Filter Options -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Filter Links</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Plan:</label>
+                            <select name="plan" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Plans</option>
+                                {% for plan in plans %}
+                                    <option value="{{ plan.id }}" {% if request.GET.plan|stringformat:"s" == plan.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ plan.name }} (₹{{ plan.price }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Coupon:</label>
+                            <select name="coupon" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Coupons</option>
+                                <option value="none" {% if request.GET.coupon == "none" %}selected{% endif %}>Without Coupon</option>
+                                {% for coupon in coupons %}
+                                    <option value="{{ coupon.code }}" {% if request.GET.coupon == coupon.code %}selected{% endif %}>
+                                        {{ coupon.code }} ({{ coupon.discount_percent }}%)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Links Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Your Shareable Links ({{ links|length }})</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Plan</th>
+                                <th>Price</th>
+                                <th>Coupon</th>
+                                <th>Discount</th>
+                                <th>Link</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for link in links %}
+                            <tr>
+                                <td><strong>{{ link.plan_name }}</strong></td>
+                                <td>₹{{ link.plan_price }}</td>
+                                <td>
+                                    {% if link.coupon_code == "None (Full Price)" %}
+                                        <span class="badge bg-secondary">No Coupon</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ link.coupon_code }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ link.coupon_discount }}</td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm link-input" 
+                                           value="{{ link.url }}" readonly style="max-width: 250px;">
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" 
+                                            onclick="copyLink('{{ link.url }}', this)">
+                                        📋 Copy
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No active plans or coupons found. <a href="/admin/news/subscriptionplan/">Create a plan</a> or 
+                                    <a href="/admin/news/coupon/">Create a coupon</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Quick Share Options -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Quick Share</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Share via Email:</strong></p>
+                    <textarea class="form-control mb-3" rows="4" id="emailText" readonly>Subject: 🎉 Exclusive Subscription Offer - Get Discounts!
+
+Hi there,
+
+We're excited to offer you exclusive discounts on our premium subscription plans!
+
+{% for link in links %}
+{{ link.plan_name }} (₹{{ link.plan_price }}) with {{ link.coupon_code }}: {{ link.url }}
+{% endfor %}
+
+Don't miss out on premium access!
+
+Best regards,
+News Portal Team</textarea>
+                    <button class="btn btn-info" onclick="copyText('emailText')">📋 Copy Email Template</button>
+                    
+                    <hr>
+                    
+                    <p><strong>Share via WhatsApp/SMS:</strong></p>
+                    <textarea class="form-control mb-3" rows="3" id="whatsappText" readonly>🎊 LIMITED TIME OFFER! 🎊
+
+Get premium access to our news portal!
+
+{% for link in links %}
+📰 {{ link.plan_name }}: {{ link.url }}
+{% endfor %}
+
+Subscribe now! 👉</textarea>
+                    <button class="btn btn-success" onclick="copyText('whatsappText')">📋 Copy WhatsApp Text</button>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="alert alert-info mt-4">
+                <h5>📌 How to Use:</h5>
+                <ol>
+                    <li>Select a link from the table above</li>
+                    <li>Click "Copy" to copy the link</li>
+                    <li>Share it with users via Email, WhatsApp, SMS, or Social Media</li>
+                    <li>When users click the link, the coupon will be automatically applied at checkout</li>
+                    <li>Track payments in <a href="{% url 'admin_subscriptions' %}">Subscriptions Dashboard</a></li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .link-input {
+        font-size: 0.85rem;
+        font-family: monospace;
+    }
+    
+    .btn {
+        white-space: nowrap;
+    }
+    
+    table {
+        font-size: 0.95rem;
+    }
+    
+    .badge {
+        font-size: 0.8rem;
+    }
+</style>
+
+<script>
+function copyLink(url, button) {
+    navigator.clipboard.writeText(url).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✅ Copied!';
+        setTimeout(() => {
+            button.textContent = originalText;
+        }, 2000);
+    });
+}
+
+function copyText(elementId) {
+    const textArea = document.getElementById(elementId);
+    textArea.select();
+    document.execCommand('copy');
+    
+    const button = event.target;
+    const originalText = button.textContent;
+    button.textContent = '✅ Copied to Clipboard!';
+    setTimeout(() => {
+        button.textContent = originalText;
+    }, 2000);
+}
+</script>
+{% endblock %}

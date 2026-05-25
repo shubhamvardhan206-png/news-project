@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% block title %}{{ user.username }} — Subscription Details{% endblock %}
+
+{% block extra_head %}
+<style>
+  .detail-header {
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .user-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+  }
+  .detail-header-info h1 {
+    font-family: var(--serif);
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ink);
+  }
+  .detail-header-info p {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 4px 0 0;
+  }
+  .breadcrumb { margin-bottom: 24px; }
+  .breadcrumb a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb span { color: var(--muted); margin: 0 6px; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .info-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .info-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+  .info-card:nth-child(2)::before { background: #27ae60; }
+  .info-card h3 {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .info-value {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .info-sub { font-size: 12px; color: var(--muted); }
+
+  .panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+  }
+  .panel-header h2 {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+  }
+  .table { width: 100%; border-collapse: collapse; }
+  .table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+  }
+  .table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: rgba(192,57,43,0.03); }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .badge-active { background: #d4edda; color: #155724; }
+  .badge-inactive { background: #f8d7da; color: #721c24; }
+  .badge-completed { background: #d4edda; color: #155724; }
+  .badge-pending { background: #fff3cd; color: #856404; }
+  .badge-failed { background: #f8d7da; color: #721c24; }
+
+  .amount { font-weight: 700; color: var(--accent); }
+  .text-muted { color: var(--muted); }
+  .text-small { font-size: 12px; }
+
+  @media (max-width: 768px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .detail-header { flex-direction: column; text-align: center; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{% url 'admin_subscriptions' %}">Subscriptions</a>
+  <span>/</span>
+  <span>{{ user.username }}</span>
+</div>
+
+<!-- USER HEADER -->
+<div class="detail-header">
+  <div class="user-avatar-large">{{ user.username|first|upper }}</div>
+  <div class="detail-header-info">
+    <h1>{{ user.username }}</h1>
+    <p>{{ user.email }}</p>
+    <p class="text-small" style="color: var(--muted); margin-top: 8px;">
+      Joined {{ user.date_joined|date:"M d, Y" }}
+    </p>
+  </div>
+</div>
+
+<!-- INFO CARDS -->
+<div class="detail-grid">
+  <!-- CURRENT SUBSCRIPTION -->
+  {% with current_sub=subscriptions|first %}
+  <div class="info-card">
+    <h3>Current Subscription</h3>
+    {% if current_sub %}
+      <div class="info-value">{{ current_sub.plan.name }}</div>
+      <div class="info-sub">
+        Valid until <strong>{{ current_sub.end_date|date:"M d, Y" }}</strong>
+        {% if current_sub.is_active %}
+          <br><span class="badge badge-active" style="margin-top: 8px;">Active</span>
+        {% else %}
+          <br><span class="badge badge-inactive" style="margin-top: 8px;">Expired</span>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="info-value" style="color: var(--muted);">No Active Plan</div>
+      <div class="info-sub">User has not subscribed to any plan</div>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  <!-- TOTAL SPENT -->
+  <div class="info-card">
+    <h3>Total Spent</h3>
+    <div class="info-value">₹{{ total_spent|floatformat:2 }}</div>
+    <div class="info-sub">Across all completed payments</div>
+  </div>
+</div>
+
+<!-- SUBSCRIPTION HISTORY -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Subscription History</h2>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Plan</th>
+        <th>Started</th>
+        <th>Expires</th>
+        <th>Duration</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sub in subscriptions %}
+        <tr>
+          <td><strong>{{ sub.plan.name }}</strong></td>
+          <td class="text-small">{{ sub.start_date|date:"M d, Y" }}</td>
+          <td class="text-small">{{ sub.end_date|date:"M d, Y" }}</td>
+          <td class="text-small">{{ sub.plan.duration_days }} days</td>
+          <td>
+            {% if sub.is_active %}
+              <span class="badge badge-active">Active</span>
+            {% else %}
+              <span class="badge badge-inactive">Expired</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">No subscription history.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- PAYMENT DETAILS -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Payment Details</h2>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Plan</th>
+        <th>Amount</th>
+        <th>Discount</th>
+        <th>Final Amount</th>
+        <th>Status</th>
+        <th>Method</th>
+        <th>Transaction ID</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in payments %}
+        <tr>
+          <td class="text-small">{{ payment.created_at|date:"M d, Y" }}</td>
+          <td><strong>{{ payment.plan.name }}</strong></td>
+          <td class="amount text-small">₹{{ payment.amount }}</td>
+          <td class="text-small">
+            {% if payment.discount_amount > 0 %}
+              <span style="color: #27ae60;">-₹{{ payment.discount_amount }}</span>
+              {% if payment.coupon %}<br><span class="badge" style="background: var(--paper); color: var(--accent); font-size: 9px;">{{ payment.coupon.code }}</span>{% endif %}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="amount text-small">₹{{ payment.final_amount }}</td>
+          <td>
+            {% if payment.status == 'completed' %}
+              <span class="badge badge-completed">Completed</span>
+            {% elif payment.status == 'pending' %}
+              <span class="badge badge-pending">Pending</span>
+            {% elif payment.status == 'failed' %}
+              <span class="badge badge-failed">Failed</span>
+            {% else %}
+              <span class="badge">{{ payment.status|upper }}</span>
+            {% endif %}
+          </td>
+          <td class="text-small">{{ payment.payment_method }}</td>
+          <td class="text-small" style="font-family: monospace; font-size: 11px;">{{ payment.transaction_id|truncatechars:16 }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">No payments made yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

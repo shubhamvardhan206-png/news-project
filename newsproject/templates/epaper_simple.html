@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="epaper-wrapper">
+    <div class="epaper-header">
+        <h1>📰 E-Paper</h1>
+        <p class="tagline">Today's Breaking News & Updates</p>
+    </div>
+    
+    {% if articles %}
+        <div class="epaper-grid">
+            {% for article in articles %}
+                <article class="news-card">
+                    <div class="news-card-content">
+                        <span class="source-tag">{{ article.source }}</span>
+                        
+                        <h3 class="news-title">{{ article.title }}</h3>
+                        
+                        <p class="news-summary">{{ article.summary|truncatewords:50 }}</p>
+                        
+                        <div class="news-meta">
+                            <span class="meta-item">📅 {{ article.published|date:"M d, Y" }}</span>
+                            <span class="meta-item">👤 {{ article.author|truncatewords:3 }}</span>
+                        </div>
+                        
+                        <a href="{{ article.link }}" target="_blank" class="read-btn">
+                            Read Full Article →
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="loading">
+            <p>⏳ Loading content...</p>
+        </div>
+    {% endif %}
+    
+    <div class="action-buttons">
+        <a href="{% url 'home' %}" class="btn-back">← Back to Home</a>
+        <a href="{% url 'epaper' %}" class="btn-refresh">🔄 Refresh</a>
+    </div>
+</div>
+
+<style>
+.epaper-wrapper {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+    padding: 30px 20px;
+    color: #e0e0e0;
+}
+
+.epaper-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.epaper-header h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #ff6b6b, #ff8787);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+}
+
+.tagline {
+    font-size: 16px;
+    color: #b0b0b0;
+}
+
+.epaper-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.news-card {
+    background: linear-gradient(135deg, #2d2d44 0%, #3d3d5c 100%);
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 25px;
+    transition: all 0.3s;
+}
+
+.news-card:hover {
+    transform: translateY(-8px);
+    border-color: #ff6b6b;
+    box-shadow: 0 15px 40px rgba(255, 107, 107, 0.25);
+}
+
+.source-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff6b6b, #ff8787);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.news-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    color: #fff;
+}
+
+.news-summary {
+    font-size: 14px;
+    color: #b0b0b0;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.news-meta {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #444;
+    font-size: 12px;
+    color: #888;
+}
+
+.read-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff6b6b, #ff8787);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.read-btn:hover {
+    transform: scale(1.05);
+}
+
+.action-buttons {
+    max-width: 1200px;
+    margin: 40px auto 0;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn-back, .btn-refresh {
+    padding: 12px 30px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    border: 2px solid #ff6b6b;
+}
+
+.btn-back {
+    background: transparent;
+    color: #ff6b6b;
+}
+
+.btn-refresh {
+    background: #ff6b6b;
+    color: #fff;
+}
+
+.btn-back:hover, .btn-refresh:hover {
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .epaper-header h1 {
+        font-size: 32px;
+    }
+    
+    .epaper-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

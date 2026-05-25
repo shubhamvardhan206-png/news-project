@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (Article, Category, Comment, Author, Like,
-                     Advertisement, SubscriptionPlan, UserSubscription)
+                     Advertisement, SubscriptionPlan, UserSubscription,
+                     Coupon, UPIPayment)
 from .models import UserProfile
 from .models import Payment
 @admin.register(Category)
@@ -61,12 +62,49 @@ class UserProfileAdmin(admin.ModelAdmin):
 class PaymentAdmin(admin.ModelAdmin):
     # This customizes how the list looks in the admin panel
     list_display = ('user', 'transaction_id', 'amount', 'status', 'created_at')
-    
+
     # This adds a filter on the right sidebar so you can see 'Pending' vs 'Approved' payments quickly
     list_filter = ('status', 'created_at')
-    
+
     # This adds a search bar to find payments by username or transaction ID
     search_fields = ('user__username', 'transaction_id')
-    
+
     # Allows you to edit the status directly from the list view
     list_editable = ('status',)
+
+
+@admin.register(Coupon)
+class CouponAdmin(admin.ModelAdmin):
+    list_display = ('code', 'discount_percent', 'discount_amount', 'valid_until', 'is_active', 'times_used', 'max_uses')
+    list_filter = ('is_active', 'valid_until', 'created_at')
+    search_fields = ('code', 'description')
+    list_editable = ('is_active',)
+    filter_horizontal = ('applicable_plans',)
+    readonly_fields = ('times_used', 'created_at')
+    fieldsets = (
+        ('Coupon Code', {
+            'fields': ('code', 'description')
+        }),
+        ('Discount Settings', {
+            'fields': ('discount_percent', 'discount_amount')
+        }),
+        ('Validity Period', {
+            'fields': ('valid_from', 'valid_until', 'is_active')
+        }),
+        ('Usage Limits', {
+            'fields': ('max_uses', 'times_used')
+        }),
+        ('Plans', {
+            'fields': ('applicable_plans',),
+            'description': 'Leave empty to apply to all subscription plans'
+        }),
+    )
+
+
+@admin.register(UPIPayment)
+class UPIPaymentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'upi_id', 'amount', 'status', 'transaction_ref_id', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('user__username', 'upi_id', 'transaction_ref_id')
+    readonly_fields = ('created_at', 'updated_at', 'qr_code_base64')
+

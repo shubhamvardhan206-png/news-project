@@ -1,0 +1,459 @@
+{% extends 'base.html' %}
+{% block title %}Payment History Analytics — Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .admin-header { margin-bottom: 24px; }
+  .admin-header h1 { font-family: var(--serif); font-size: 36px; font-weight: 800; }
+  .admin-header p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  .period-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .period-tabs .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--paper);
+    color: var(--ink);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .period-tabs .btn:hover { background: var(--border); }
+  .period-tabs .btn.active { 
+    background: var(--accent); 
+    color: white; 
+    border-color: var(--accent); 
+  }
+
+  .download-btn {
+    padding: 10px 16px;
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .download-btn:hover { background: #229954; }
+
+  .admin-nav { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .admin-nav a {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--paper);
+    color: var(--ink);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .admin-nav a:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .admin-nav a.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+  .stat-card:nth-child(2)::before { background: #27ae60; }
+  .stat-card:nth-child(3)::before { background: #2980b9; }
+  .stat-card:nth-child(4)::before { background: #e67e22; }
+  .stat-card:nth-child(5)::before { background: #8e44ad; }
+  .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-family: var(--serif); font-size: 26px; font-weight: 800; line-height: 1; color: var(--ink); }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  .filters {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .filter-group label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+  .filter-group input, .filter-group select {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 13px;
+  }
+  .filter-group input:focus, .filter-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .filter-btn {
+    align-self: flex-end;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .filter-btn:hover { background: #c0392b; }
+
+  .section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .section-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+  }
+  .section-header h2 {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+  }
+  .section-content { padding: 20px; overflow-x: auto; }
+
+  .table { width: 100%; border-collapse: collapse; }
+  .table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+  }
+  .table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: rgba(192,57,43,0.03); }
+  .table a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .table a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .badge-success { background: #d4edda; color: #155724; }
+  .badge-pending { background: #fff3cd; color: #856404; }
+  .badge-failed { background: #f8d7da; color: #721c24; }
+
+  .user-info { display: flex; align-items: center; gap: 8px; }
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .amount { font-weight: 700; color: var(--accent); }
+  .discount { color: #27ae60; font-weight: 600; }
+  .text-muted { color: var(--muted); }
+  .text-small { font-size: 12px; }
+
+  .coupon-badge {
+    background: var(--paper);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+
+  .row-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+  @media (max-width: 1024px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .filters { grid-template-columns: 1fr; }
+    .row-layout { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <h1>💳 Payment History & Analytics</h1>
+  <p>Track all payments, coupon usage, and revenue metrics. Download transaction data by period.</p>
+</div>
+
+<div class="admin-nav">
+  <a href="{% url 'admin_subscriptions' %}">Subscriptions</a>
+  <a href="{% url 'admin_coupons' %}">Coupons</a>
+  <a href="{% url 'admin_payment_history' %}" class="active">Payments</a>
+  <a href="{% url 'admin_dashboard' %}">Analytics</a>
+</div>
+
+<!-- PERIOD FILTER TABS -->
+<div style="display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;">
+  <div class="period-tabs" style="flex: 1; display: flex; gap: 8px; margin-bottom: 0;">
+    {% for period in periods %}
+    <a href="?period={{ period }}" 
+       class="btn {% if current_period == period %}active{% endif %}">
+      {{ period|upper }}
+    </a>
+    {% endfor %}
+  </div>
+  <a href="?period={{ current_period }}&download=1" class="download-btn">
+    <i class="fas fa-download"></i> Download CSV
+  </a>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Payments</div>
+    <div class="stat-value">{{ stats.total }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Completed</div>
+    <div class="stat-value">{{ stats.completed }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Revenue (₹)</div>
+    <div class="stat-value">{{ stats.revenue|floatformat:0 }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Discount (₹)</div>
+    <div class="stat-value">{{ stats.discount|floatformat:0 }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Avg Payment (₹)</div>
+    <div class="stat-value">{{ stats.avg|floatformat:0 }}</div>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<form method="get" class="filters">
+  <div class="filter-group">
+    <label>Status</label>
+    <select name="status">
+      <option value="">All Statuses</option>
+      <option value="completed" {% if filters.status == 'completed' %}selected{% endif %}>Completed</option>
+      <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
+      <option value="failed" {% if filters.status == 'failed' %}selected{% endif %}>Failed</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label>Coupon Code</label>
+    <input type="text" name="coupon" placeholder="Search coupon..." value="{{ filters.coupon }}">
+  </div>
+
+  <div class="filter-group">
+    <label>Payment Method</label>
+    <select name="method">
+      <option value="">All Methods</option>
+      <option value="UPI" {% if filters.method == 'UPI' %}selected{% endif %}>UPI</option>
+      <option value="CARD" {% if filters.method == 'CARD' %}selected{% endif %}>Card</option>
+      <option value="NETBANKING" {% if filters.method == 'NETBANKING' %}selected{% endif %}>Net Banking</option>
+    </select>
+  </div>
+
+  <button type="submit" class="filter-btn">Filter</button>
+</form>
+
+<!-- TOP COUPONS -->
+<div class="row-layout">
+  <div class="section">
+    <div class="section-header">
+      <h2>Top Coupons Used</h2>
+    </div>
+    <div class="section-content">
+      {% if coupon_stats %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Coupon Code</th>
+              <th>Times Used</th>
+              <th>Total Discount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for coupon in coupon_stats %}
+              <tr>
+                <td><span class="coupon-badge">{{ coupon.code }}</span></td>
+                <td class="text-small">{{ coupon.usage_count }}</td>
+                <td class="discount text-small">₹{{ coupon.total_discount|default:0|floatformat:2 }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">No coupons used yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- PAYMENT METHOD BREAKDOWN -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Revenue by Payment Method</h2>
+    </div>
+    <div class="section-content">
+      {% if method_stats %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Transactions</th>
+              <th>Revenue (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for method in method_stats %}
+              <tr>
+                <td><strong>{{ method.payment_method }}</strong></td>
+                <td class="text-small">{{ method.count }}</td>
+                <td class="amount text-small">₹{{ method.total|floatformat:2 }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">No payments yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT TRANSACTIONS -->
+<div class="section">
+  <div class="section-header">
+    <h2>All Payment Transactions</h2>
+  </div>
+  {% if payments %}
+    <div style="overflow-x: auto;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>User</th>
+            <th>Plan</th>
+            <th>Amount</th>
+            <th>Coupon</th>
+            <th>Discount</th>
+            <th>Final Amount</th>
+            <th>Status</th>
+            <th>Method</th>
+            <th>Transaction ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payment in payments %}
+            <tr>
+              <td class="text-small">{{ payment.created_at|date:"M d, Y" }}</td>
+              <td>
+                <div class="user-info">
+                  <div class="user-avatar">{{ payment.user.username|first|upper }}</div>
+                  <a href="{% url 'user_subscription_detail' payment.user.id %}">{{ payment.user.username }}</a>
+                </div>
+              </td>
+              <td class="text-small"><strong>{{ payment.plan.name }}</strong></td>
+              <td class="amount text-small">₹{{ payment.amount }}</td>
+              <td>
+                {% if payment.coupon %}
+                  <span class="coupon-badge">{{ payment.coupon.code }}</span>
+                {% else %}
+                  <span class="text-muted text-small">—</span>
+                {% endif %}
+              </td>
+              <td class="discount text-small">
+                {% if payment.discount_amount > 0 %}
+                  -₹{{ payment.discount_amount }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="amount text-small">₹{{ payment.final_amount }}</td>
+              <td>
+                {% if payment.status == 'completed' %}
+                  <span class="badge badge-success">Completed</span>
+                {% elif payment.status == 'pending' %}
+                  <span class="badge badge-pending">Pending</span>
+                {% elif payment.status == 'failed' %}
+                  <span class="badge badge-failed">Failed</span>
+                {% else %}
+                  <span class="badge">{{ payment.status|upper }}</span>
+                {% endif %}
+              </td>
+              <td class="text-small">{{ payment.payment_method }}</td>
+              <td class="text-small" style="font-family: monospace; font-size: 11px;">{{ payment.transaction_id|truncatechars:14 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 40px; color: var(--muted);">
+      <p>No payments found matching your filters.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

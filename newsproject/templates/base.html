@@ -190,6 +190,9 @@
       <a href="{% url 'home' %}" style="color:#ccc; text-decoration:none; padding:5px 10px; font-size:13px; white-space:nowrap;">
         Home
       </a>
+      <a href="{% url 'epaper' %}" style="color:#ccc; text-decoration:none; padding:5px 10px; font-size:13px; white-space:nowrap;">
+        E-Paper
+      </a>
       {% for cat in categories|slice:":6" %}
       <a href="{% url 'category_articles' cat.slug %}" 
          style="color:#ccc; text-decoration:none; padding:5px 10px; font-size:13px; white-space:nowrap;">
@@ -261,6 +264,7 @@
 
 <div class="mobile-menu" id="mobileMenu">
   <a href="{% url 'home' %}">Home</a>
+  <a href="{% url 'epaper' %}">E-Paper</a>
   <div style="padding: 8px 0;">
     <form method="GET" action="{% url 'search' %}" style="display:flex; background:#2d2d44; border-radius:20px; border:1px solid #444; width:100%;">
       <input type="text" name="query" placeholder="Search..." style="background:transparent; border:none; outline:none; color:white; padding:6px 12px; width:100%; font-size:13px;">
@@ -362,6 +366,7 @@
       <div class="footer-heading" style="margin-top: 24px;">More</div>
       <ul class="footer-links">
         <li><a href="{% url 'subscription_plans' %}">Subscribe</a></li>
+        <li><a href="{% url 'epaper' %}">E-Paper</a></li>
         <li><a href="#about">About Us</a></li>
         <li><a href="#contact">Contact Us</a></li>
         <li><a href="#advertise">Advertise</a></li>

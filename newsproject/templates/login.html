@@ -240,32 +240,22 @@
       {% endfor %}
     {% endif %}
 
-    <div class="social-stack">
       
+     <div class="social-stack">
       <a href="{% provider_login_url 'google' %}" class="btn-social-link">
         <button type="button" class="btn-social">
           <i class="fa-brands fa-google btn-icon google-icon"></i>
           <span class="btn-text">Continue with Google</span>
         </button>
       </a>
-
       <a href="{% provider_login_url 'facebook' %}" class="btn-social-link">
         <button type="button" class="btn-social">
           <i class="fa-brands fa-facebook btn-icon facebook-icon"></i>
           <span class="btn-text">Continue with Facebook</span>
         </button>
       </a>
-
-      <a href="#" class="btn-social-link">
-        <button type="button" class="btn-social">
-          <i class="fa-brands fa-apple btn-icon apple-icon"></i>
-          <span class="btn-text">Continue with Apple</span>
-        </button>
-      </a>
-
     </div>
-    
-    <div class="section-divider"></div>
+    <div class="section-divider"></div> 
 
     <form method="POST" action="{% url 'login' %}" class="native-form">
       {% csrf_token %}

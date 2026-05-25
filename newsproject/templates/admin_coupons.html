@@ -1,0 +1,214 @@
+    {% extends 'base.html' %}
+{% block title %}Coupons — Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .admin-header { margin-bottom: 36px; }
+  .admin-header h1 { font-family: var(--serif); font-size: 36px; font-weight: 800; }
+  .admin-header p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .admin-nav { display: flex; gap: 12px; margin-bottom: 24px; }
+  .admin-nav a {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--paper);
+    color: var(--ink);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .admin-nav a:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .admin-nav a.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+  .stat-card:nth-child(2)::before { background: #27ae60; }
+  .stat-card:nth-child(3)::before { background: #e74c3c; }
+  .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-family: var(--serif); font-size: 32px; font-weight: 800; line-height: 1; color: var(--ink); }
+
+  .panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+  }
+  .panel-header h2 {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+  }
+  .table { width: 100%; border-collapse: collapse; }
+  .table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+  }
+  .table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: rgba(192,57,43,0.03); }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .badge-active { background: #d4edda; color: #155724; }
+  .badge-expired { background: #f8d7da; color: #721c24; }
+  .badge-limited { background: #fff3cd; color: #856404; }
+
+  .code-badge {
+    background: var(--paper);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+
+  .discount { font-weight: 700; color: var(--accent); }
+  .text-muted { color: var(--muted); }
+  .text-small { font-size: 12px; }
+
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <h1>Coupon Codes</h1>
+  <p>Manage discount coupons and track usage.</p>
+</div>
+
+<div class="admin-nav">
+  <a href="{% url 'admin_subscriptions' %}">Subscriptions</a>
+  <a href="{% url 'admin_payment_history' %}">Payments</a>
+  <a href="{% url 'admin_coupons' %}" class="active">Coupons</a>
+  <a href="{% url 'admin_dashboard' %}">Analytics</a>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Coupons</div>
+    <div class="stat-value">{{ stats.total_coupons }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active Coupons</div>
+    <div class="stat-value">{{ stats.active_coupons }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Expired</div>
+    <div class="stat-value">{{ stats.expired_coupons }}</div>
+  </div>
+</div>
+
+<!-- ALL COUPONS -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>All Coupons</h2>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Discount</th>
+        <th>Valid From</th>
+        <th>Valid Until</th>
+        <th>Usage</th>
+        <th>Status</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for coupon in coupons %}
+        <tr>
+          <td>
+            <span class="code-badge">{{ coupon.code }}</span>
+          </td>
+          <td class="discount">
+            {% if coupon.discount_percent %}
+              {{ coupon.discount_percent }}%
+            {% elif coupon.discount_amount %}
+              ₹{{ coupon.discount_amount }}
+            {% endif %}
+          </td>
+          <td class="text-small text-muted">{{ coupon.valid_from|date:"M d, Y" }}</td>
+          <td class="text-small text-muted">{{ coupon.valid_until|date:"M d, Y" }}</td>
+          <td>
+            {% if coupon.max_uses %}
+              <span class="text-small">{{ coupon.times_used }}/{{ coupon.max_uses }}</span>
+            {% else %}
+              <span class="text-small">{{ coupon.times_used }}/∞</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if coupon.is_valid %}
+              <span class="badge badge-active">Active</span>
+            {% elif coupon.is_expired %}
+              <span class="badge badge-expired">Expired</span>
+            {% else %}
+              <span class="badge badge-limited">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-small text-muted">{{ coupon.description|truncatechars:40 }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">
+            No coupons created yet.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

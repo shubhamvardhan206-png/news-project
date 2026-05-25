@@ -1,33 +1,195 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <h3>Transaction History</h3>
-    <table class="table table-striped table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Date</th>
-                <th>Transaction ID</th>
-                <th>Amount</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for p in payments %}
-            <tr>
-                <td>{{ p.created_at|date:"d M, Y" }}</td>
-                <td>{{ p.transaction_id }}</td>
-                <td>₹{{ p.amount }}</td>
-                <td>
-                    {% if p.status == 'Approved' %}
-                    <span class="badge bg-success">Approved</span>
-                    {% else %}
-                    <span class="badge bg-warning text-dark">Pending</span>
-                    {% endif %}
-                </td>
-            </tr>
+<div class="container mt-5 mb-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold">💳 Transaction History</h2>
+            <p class="text-muted">View and download your payment transactions</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="?period={{ current_period }}&download=1" class="btn btn-outline-success">
+                <i class="fas fa-download"></i> Download CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Period Filter Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                {% for period in periods %}
+                <a href="?period={{ period }}" 
+                   class="btn {% if current_period == period %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                    {{ period_data|get_item:period|get_item:'display_name' }}
+                    <span class="badge bg-dark">{{ period_data|get_item:period|get_item:'count' }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted d-block">Total Transactions</small>
+                    <h4 class="fw-bold text-danger">{{ stats.count }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted d-block">Completed</small>
+                    <h4 class="fw-bold text-success">{{ stats.completed }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted d-block">Total Revenue</small>
+                    <h4 class="fw-bold text-primary">₹{{ stats.total|floatformat:2 }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted d-block">Avg Payment</small>
+                    <h4 class="fw-bold text-info">₹{{ stats.average|floatformat:2 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card border-0 shadow">
+        <div class="card-body p-0">
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Date</th>
+                            <th>Transaction ID</th>
+                            <th>Plan</th>
+                            <th>Amount</th>
+                            <th>Discount</th>
+                            <th>Final Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in payments %}
+                        <tr>
+                            <td class="ps-4">{{ p.created_at|date:"d M, Y H:i" }}</td>
+                            <td>
+                                <code class="text-danger">{{ p.transaction_id }}</code>
+                            </td>
+                            <td>
+                                {% if p.plan %}
+                                    <span class="badge bg-light text-dark">{{ p.plan.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>₹{{ p.amount|floatformat:2 }}</td>
+                            <td>
+                                {% if p.discount_amount > 0 %}
+                                    <span class="text-success">-₹{{ p.discount_amount|floatformat:2 }}</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">₹{{ p.final_amount|floatformat:2 }}</td>
+                            <td>
+                                <small class="badge bg-secondary">{{ p.payment_method }}</small>
+                            </td>
+                            <td>
+                                {% if p.status == 'completed' %}
+                                    <span class="badge bg-success">✓ Completed</span>
+                                {% elif p.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">⏳ Pending</span>
+                                {% elif p.status == 'failed' %}
+                                    <span class="badge bg-danger">✗ Failed</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ p.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted">📭 No transactions found for this period</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Subscriptions Section -->
+    {% if subscriptions %}
+    <div class="mt-5">
+        <h4 class="fw-bold mb-3">📋 Active Subscriptions</h4>
+        <div class="row">
+            {% for sub in subscriptions %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title fw-bold">{{ sub.plan.name }}</h5>
+                                <p class="card-text text-muted mb-2">
+                                    <small>Started: {{ sub.start_date|date:"d M, Y" }}</small>
+                                </p>
+                                <p class="card-text text-muted">
+                                    <small>Expires: 
+                                        {% if sub.end_date %}
+                                            {{ sub.end_date|date:"d M, Y" }}
+                                        {% else %}
+                                            Lifetime
+                                        {% endif %}
+                                    </small>
+                                </p>
+                            </div>
+                            {% if sub.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<style>
+    .btn-group .btn {
+        border-radius: 0;
+    }
+    .btn-group .btn:first-child {
+        border-radius: 5px 0 0 5px;
+    }
+    .btn-group .btn:last-child {
+        border-radius: 0 5px 5px 0;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(192, 57, 43, 0.05);
+    }
+</style>
+
+<!-- Custom filter for dictionary access in templates -->
+<script>
+// This is handled via template filter in views - see admin_payment_history template for example
+</script>
 {% endblock %}
