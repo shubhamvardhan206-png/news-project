@@ -56,23 +56,38 @@ def get_news_from_api(category=None):
     # Map database category slugs to NewsAPI categories
     category_map = {
         'technology': 'technology',
+        'tecnology': 'technology',  # Handle misspelling
         'sports': 'sports',
+        'Sports': 'sports',
         'business': 'business',
+        'Business': 'business',
         'entertainment': 'entertainment',
+        'Entertainment': 'entertainment',
         'health': 'health',
+        'Health': 'health',
         'science': 'science',
+        'Science': 'science',
         'politics': 'politics',
+        'Politics': 'politics',
         'world': 'world',
-        'india': 'india',
+        'World': 'world',
+        'india': 'general',
+        'India': 'general',
+        'education': 'general',
+        'Education': 'general',
+        'security': 'general',
+        'Security': 'general',
+        'environment': 'environment',
+        'Environment': 'environment',
         'general': 'general',
     }
 
     # If category is provided and in map, use it; otherwise use general
-    news_category = category_map.get(category, category if category else 'general')
+    news_category = category_map.get(category, 'general')
 
     try:
         # India News with category query
-        india_query = f'{news_category} India' if news_category != 'india' else 'India'
+        india_query = f'{news_category} India' if news_category != 'general' else 'India'
         r1 = requests.get('https://newsapi.org/v2/everything', params={
             'apiKey': api_key,
             'q': india_query,
@@ -87,7 +102,7 @@ def get_news_from_api(category=None):
             all_articles += data1['articles']
 
         # World News with category query
-        world_query = news_category if news_category not in ['india', 'general'] else 'international'
+        world_query = news_category if news_category != 'general' else 'international'
         r2 = requests.get('https://newsapi.org/v2/everything', params={
             'apiKey': api_key,
             'q': world_query,
