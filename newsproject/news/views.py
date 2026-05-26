@@ -10,7 +10,8 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import (
     Article, Category, Comment, Author, Like, Advertisement,
-    SubscriptionPlan, UserSubscription, UserProfile, Payment, Coupon
+    SubscriptionPlan, UserSubscription, UserProfile, Payment, Coupon,
+    State, District, Block, FetchedNews
 )
 import requests
 from django.conf import settings
@@ -952,3 +953,103 @@ def get_epaper_content():
             continue
     
     return articles
+
+
+# ============================================================================
+# LOCATION API VIEWS
+# ============================================================================
+
+def api_get_states(request):
+    """API endpoint to get all states"""
+    states = State.objects.all().values('id', 'name', 'code').order_by('name')
+    return JsonResponse({'states': list(states)})
+
+
+def api_get_districts(request):
+    """API endpoint to get districts for a state"""
+    state_id = request.GET.get('state_id')
+
+    if not state_id:
+        return JsonResponse({'error': 'state_id is required'}, status=400)
+
+    try:
+        districts = District.objects.filter(
+            state_id=state_id
+        ).values('id', 'name', 'state__name').order_by('name')
+        return JsonResponse({'districts': list(districts)})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+def api_get_blocks(request):
+    """API endpoint to get blocks for a district"""
+    district_id = request.GET.get('district_id')
+
+    if not district_id:
+        return JsonResponse({'error': 'district_id is required'}, status=400)
+
+    try:
+        blocks = Block.objects.filter(
+            district_id=district_id
+        ).values('id', 'name', 'district__name').order_by('name')
+        return JsonResponse({'blocks': list(blocks)})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+def api_get_news_by_location(request):
+    """API endpoint to get news filtered by location"""
+    state_id = request.GET.get('state_id')
+    district_id = request.GET.get('district_id')
+    category = request.GET.get('category', '')
+    limit = int(request.GET.get('limit', 20))
+
+    try:
+        query = FetchedNews.objects.filter(is_active=True)
+
+        if state_id:
+            query = query.filter(state_id=state_id)
+
+        if district_id:
+            query = query.filter(district_id=district_id)
+
+        if category:
+            query = query.filter(category__icontains=category)
+
+        news = query.order_by('-published_at')[:limit].values(
+            'id', 'title', 'description', 'image_url', 'source_url',
+            'source_name', 'category', 'published_at', 'views'
+        )
+
+        return JsonResponse({'news': list(news), 'count': len(list(news))})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+def api_fetch_news_for_location(request):
+    """Manually trigger news fetch for a specific location"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    state_id = request.GET.get('state_id')
+    district_id = request.GET.get('district_id')
+    category = request.GET.get('category', '')
+
+    try:
+        from .api_services import NewsDataService
+
+        state = State.objects.get(id=state_id) if state_id else None
+        district = District.objects.get(id=district_id) if district_id else None
+
+        state_name = state.name if state else None
+        district_name = district.name if district else None
+
+        count = NewsDataService.fetch_and_store_news(
+            state_name=state_name,
+            district_name=district_name,
+            category=category if category else None
+        )
+
+        return JsonResponse({'success': True, 'articles_added': count})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

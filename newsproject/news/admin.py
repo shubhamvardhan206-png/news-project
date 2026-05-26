@@ -4,6 +4,7 @@ from .models import (Article, Category, Comment, Author, Like,
                      Coupon, UPIPayment)
 from .models import UserProfile
 from .models import Payment
+from .models import State, District, Block, FetchedNews
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
@@ -108,3 +109,39 @@ class UPIPaymentAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'upi_id', 'transaction_ref_id')
     readonly_fields = ('created_at', 'updated_at', 'qr_code_base64')
 
+
+@admin.register(State)
+class StateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code')
+    search_fields = ('name', 'code')
+    ordering = ('name',)
+
+
+@admin.register(District)
+class DistrictAdmin(admin.ModelAdmin):
+    list_display = ('name', 'state')
+    search_fields = ('name', 'state__name')
+    list_filter = ('state',)
+    ordering = ('state', 'name')
+
+
+@admin.register(Block)
+class BlockAdmin(admin.ModelAdmin):
+    list_display = ('name', 'district', 'get_state')
+    search_fields = ('name', 'district__name', 'district__state__name')
+    list_filter = ('district__state', 'district')
+    ordering = ('district', 'name')
+
+    def get_state(self, obj):
+        return obj.district.state.name
+    get_state.short_description = 'State'
+
+
+@admin.register(FetchedNews)
+class FetchedNewsAdmin(admin.ModelAdmin):
+    list_display = ('title', 'state', 'district', 'category', 'published_at', 'views', 'is_active')
+    list_filter = ('state', 'district', 'category', 'language', 'is_active', 'published_at')
+    search_fields = ('title', 'description', 'source_name')
+    readonly_fields = ('fetched_at', 'source_url', 'views')
+    list_editable = ('is_active',)
+    ordering = ('-published_at',)

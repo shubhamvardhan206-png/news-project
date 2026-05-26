@@ -27,4 +27,11 @@ urlpatterns = [
     path('dashboard/payments/', views.admin_payment_history, name='admin_payment_history'),
     path('dashboard/user/<int:user_id>/subscription/', views.user_subscription_detail, name='user_subscription_detail'),
     path('dashboard/share-links/', views.generate_share_links, name='generate_share_links'),
+
+    # Location API endpoints
+    path('api/states/', views.api_get_states, name='api_get_states'),
+    path('api/districts/', views.api_get_districts, name='api_get_districts'),
+    path('api/blocks/', views.api_get_blocks, name='api_get_blocks'),
+    path('api/news-by-location/', views.api_get_news_by_location, name='api_get_news_by_location'),
+    path('api/fetch-news-location/', views.api_fetch_news_for_location, name='api_fetch_news_for_location'),
 ]

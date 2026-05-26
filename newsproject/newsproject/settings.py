@@ -11,7 +11,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-p4we%u-^u(z(bphy7qdr!or7fc
 # Default to local development mode unless DEBUG is explicitly set to False.
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*.onrender.com', '*.pythonanywhere.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*.onrender.com', '*.pythonanywhere.com', 'testserver']
 
 
 # Application definition
@@ -182,6 +182,9 @@ SOCIALACCOUNT_PROVIDERS = {
 
 # News API Key
 NEWS_API_KEY = '83fad5e997474c6aa8705aad5edb636d'
+
+# NewsData.io API Key (get from https://newsdata.io/)
+NEWSDATA_API_KEY = os.getenv('NEWSDATA_API_KEY', 'pub_53f2f0a4ce5e0b2e5e5f5f5f5f5f5f5f5f5f')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Security settings for production

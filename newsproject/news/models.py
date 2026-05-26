@@ -259,3 +259,69 @@ class UPIPayment(models.Model):
 
     def __str__(self):
         return f'UPI Payment - {self.user.username} - {self.amount}'
+
+
+class State(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=10, unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class District(models.Model):
+    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name='districts')
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        ordering = ['name']
+        unique_together = ('state', 'name')
+
+    def __str__(self):
+        return f'{self.name} - {self.state.name}'
+
+
+class Block(models.Model):
+    district = models.ForeignKey(District, on_delete=models.CASCADE, related_name='blocks')
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        ordering = ['name']
+        unique_together = ('district', 'name')
+
+    def __str__(self):
+        return f'{self.name} - {self.district.name}'
+
+
+class FetchedNews(models.Model):
+    title = models.CharField(max_length=500)
+    description = models.TextField(blank=True, null=True)
+    content = models.TextField(blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True)
+    source_url = models.URLField(unique=True)
+    source_name = models.CharField(max_length=255, blank=True)
+    country = models.CharField(max_length=100, default='India')
+    state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
+    district = models.ForeignKey(District, on_delete=models.SET_NULL, null=True, blank=True)
+    block = models.ForeignKey(Block, on_delete=models.SET_NULL, null=True, blank=True)
+    category = models.CharField(max_length=100, blank=True)
+    language = models.CharField(max_length=10, default='en')
+    published_at = models.DateTimeField(blank=True, null=True)
+    fetched_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    views = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-published_at']
+        indexes = [
+            models.Index(fields=['state', '-published_at']),
+            models.Index(fields=['district', '-published_at']),
+            models.Index(fields=['category', '-published_at']),
+        ]
+
+    def __str__(self):
+        return self.title
