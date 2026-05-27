@@ -2,9 +2,14 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name='home'),
+     path('', views.welcome, name='welcome'),
+    
+    # News homepage - shown after redirect from welcome
+    path('home/', views.home, name='home'),
+    
+    # Optional: Article detail page
     path('article/<slug:slug>/', views.article_detail, name='article_detail'),
-    path('category/<slug:slug>/', views.category_view, name='category_articles'),
+    path('category/<slug:slug>/', views.category_articles, name='category_articles'),
     path('search/', views.search_view, name='search'),        # ← search_view
     path('author/<int:author_id>/', views.author_profile, name='author_profile'),
     path('login/', views.login_view, name='login'),           # ← login_view

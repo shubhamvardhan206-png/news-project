@@ -27,6 +27,7 @@ from django.views.decorators.cache import cache_page
 from .transactions import TransactionManager, get_transaction_context
 import feedparser
 from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
 
 
 
@@ -1053,3 +1054,151 @@ def api_fetch_news_for_location(request):
         return JsonResponse({'success': True, 'articles_added': count})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+    
+def home(request):
+    """Display news homepage with articles"""
+    # Get all categories
+    categories = Category.objects.all()
+    active_category = request.GET.get('category', '')
+    
+    # Get featured article
+    featured = Article.objects.filter(is_featured=True).first()
+    
+    # Get trending articles (by views)
+    trending = Article.objects.order_by('-views')[:5]
+    
+    # Get latest articles
+    articles = Article.objects.order_by('-created_at')
+    
+    # Filter by category if selected
+    if active_category:
+        articles = articles.filter(category__slug=active_category)
+    
+    # Get API news (from your news API integration)
+    api_news = []
+    # Add your API news fetching logic here if needed
+    
+    context = {
+        'featured': featured,
+        'trending': trending,
+        'articles': articles,
+        'categories': categories,
+        'active_category': active_category,
+        'api_news': api_news,
+    }
+    
+    return render(request, 'index.html', context) 
+   
+def welcome(request):
+    """
+    Display welcome/splash page
+    Shows first when user visits the site
+    Then redirects to home page after 5 seconds or button click
+    """
+    return render(request, 'welcome.html')
+
+
+# ✅ YOUR EXISTING HOME VIEW - Keep this as it is
+def home(request):
+    """
+    Display news homepage with articles
+    This is shown after welcome page redirect
+    """
+    try:
+        # Get all categories
+        categories = Category.objects.all()
+        active_category = request.GET.get('category', '')
+        
+        # Get featured article
+        featured = Article.objects.filter(is_featured=True).first()
+        
+        # Get trending articles (by views)
+        trending = Article.objects.order_by('-views')[:5]
+        
+        # Get latest articles
+        articles = Article.objects.order_by('-created_at')
+        
+        # Filter by category if selected
+        if active_category:
+            articles = articles.filter(category__slug=active_category)
+        
+        # Get API news (from your news API integration)
+        api_news = []
+        # Add your API news fetching logic here if needed
+        
+        context = {
+            'featured': featured,
+            'trending': trending,
+            'articles': articles,
+            'categories': categories,
+            'active_category': active_category,
+            'api_news': api_news,
+        }
+        
+        return render(request, 'index.html', context)
+    
+    except Exception as e:
+        print(f"Error in home view: {str(e)}")
+        return render(request, 'index.html', {'error': 'Error loading articles'})
+
+
+# ✅ ADD OTHER VIEWS AS NEEDED
+def article_detail(request, slug):
+    """
+    Display single article detail page
+    """
+    try:
+        article = Article.objects.get(slug=slug)
+        
+        # Increment view count
+        article.views += 1
+        article.save(update_fields=['views'])
+        
+        # Get related articles
+        related_articles = Article.objects.filter(
+            category=article.category
+        ).exclude(id=article.id)[:3]
+        
+        context = {
+            'article': article,
+            'related_articles': related_articles,
+        }
+        
+        return render(request, 'article_detail.html', context)
+    
+    except Article.DoesNotExist:
+        return render(request, '404.html', {'message': 'Article not found'}, status=404)
+
+
+# ✅ ADD MORE VIEWS AS NEEDED
+def category_list(request, slug):
+    """
+    Display articles by category
+    """
+    try:
+        category = Category.objects.get(slug=slug)
+        articles = Article.objects.filter(category=category).order_by('-created_at')
+        
+        context = {
+            'category': category,
+            'articles': articles,
+        }
+        
+        return render(request, 'category_list.html', context)
+    
+    except Category.DoesNotExist:
+        return render(request, '404.html', {'message': 'Category not found'}, status=404)
+    
+def category_articles(request, slug):
+    """Display all articles for a specific category"""
+    try:
+        category = Category.objects.get(slug=slug)
+        articles = Article.objects.filter(category=category).order_by('-created_at')
+        
+        context = {
+            'category': category,
+            'articles': articles,
+        }
+        return render(request, 'category_articles.html', context)
+    except Category.DoesNotExist:
+        return render(request, '404.html', status=404)    
