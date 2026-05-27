@@ -1,574 +1,645 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth import login, logout
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib import messages
-from django.http import JsonResponse
-from django.db.models import Q, Count, Sum
-from django.db import models
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q, Count, Prefetch
+from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
+import json
+import uuid
+
 from .models import (
-    Article, Category, Comment, Author, Like, Advertisement,
-    SubscriptionPlan, UserSubscription, UserProfile, Payment, Coupon,
-    State, District, Block, FetchedNews
+    Article, Category, Author, Comment, Like, 
+    State, District, Block, Village,
+    FetchedNews, Service, Advertisement, Feedback, ContactMessage,
+    SubscriptionPlan, UserSubscription, Coupon, Payment, UPIPayment,
+    UserProfile
 )
-import requests
-from django.conf import settings
-from django.core.cache import cache
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.contrib.auth.models import User
-from django.urls import reverse
-from urllib.parse import urlencode
-from . import selectors, services
-from .utils import generate_qr_code
-from django.views.decorators.cache import cache_page
-from .transactions import TransactionManager, get_transaction_context
-import feedparser
-from django.http import HttpResponse
 
+# ==================== LANDING & HOME ====================
 
-
-# ============================================================================
-# HELPER FUNCTIONS
-# ============================================================================
-
-def is_admin(user):
-    """Check if user is admin"""
-    return user.is_staff
-
-
-def get_ads(position):
-    """Get advertisement by position"""
-    return Advertisement.objects.filter(position=position, is_active=True).first()
-
-
-def get_news_from_api(category=None):
-    """Fetch news from NewsAPI with category filtering"""
-    cache_key = f'news_api_{category or "all"}'
-    cached = cache.get(cache_key)
-    if cached:
-        return cached
-
-    api_key = settings.NEWS_API_KEY
-    all_articles = []
-
-    # Map database category slugs to NewsAPI categories
-    category_map = {
-        'technology': 'technology',
-        'tecnology': 'technology',  # Handle misspelling
-        'sports': 'sports',
-        'Sports': 'sports',
-        'business': 'business',
-        'Business': 'business',
-        'entertainment': 'entertainment',
-        'Entertainment': 'entertainment',
-        'health': 'health',
-        'Health': 'health',
-        'science': 'science',
-        'Science': 'science',
-        'politics': 'politics',
-        'Politics': 'politics',
-        'world': 'world',
-        'World': 'world',
-        'india': 'general',
-        'India': 'general',
-        'education': 'general',
-        'Education': 'general',
-        'security': 'general',
-        'Security': 'general',
-        'environment': 'environment',
-        'Environment': 'environment',
-        'general': 'general',
+def landing(request):
+    """Landing page"""
+    featured_articles = Article.objects.filter(
+        is_published=True, 
+        is_premium=False
+    ).order_by('-published_at')[:5]
+    
+    top_services = Service.objects.filter(is_active=True).order_by('order')[:3]
+    
+    context = {
+        'featured_articles': featured_articles,
+        'top_services': top_services,
     }
+    return render(request, 'landing.html', context)
 
-    # If category is provided and in map, use it; otherwise use general
-    news_category = category_map.get(category, 'general')
-
-    try:
-        # India News with category query
-        india_query = f'{news_category} India' if news_category != 'general' else 'India'
-        r1 = requests.get('https://newsapi.org/v2/everything', params={
-            'apiKey': api_key,
-            'q': india_query,
-            'language': 'en',
-            'sortBy': 'publishedAt',
-            'pageSize': 6,
-        })
-        data1 = r1.json()
-        if data1.get('status') == 'ok':
-            for article in data1['articles']:
-                article['source_region'] = '🇮🇳 India'
-            all_articles += data1['articles']
-
-        # World News with category query
-        world_query = news_category if news_category != 'general' else 'international'
-        r2 = requests.get('https://newsapi.org/v2/everything', params={
-            'apiKey': api_key,
-            'q': world_query,
-            'language': 'en',
-            'sortBy': 'publishedAt',
-            'pageSize': 6,
-        })
-        data2 = r2.json()
-        if data2.get('status') == 'ok':
-            for article in data2['articles']:
-                article['source_region'] = '🌍 World'
-            all_articles += data2['articles']
-
-        # Cache for 30 minutes
-        cache.set(cache_key, all_articles, 60 * 30)
-        return all_articles
-
-    except Exception as e:
-        print(f"API ERROR for category '{category}': {e}")
-        return []
-
-
-# ============================================================================
-# MAIN VIEWS
-# ============================================================================
 
 def home(request):
-    """Home page with articles and filters"""
-    articles = Article.objects.filter(is_published=True)
+    """News homepage - MATCHES home.html template exactly"""
+    
+    # 1. Featured article (single, most recent published)
+    featured = Article.objects.filter(
+        is_published=True
+    ).order_by('-published_at').first()
+    
+    # 2. Trending articles (top 5 by views)
+    trending = Article.objects.filter(
+        is_published=True
+    ).order_by('-views')[:5]
+    
+    # 3. Categories
     categories = Category.objects.all()
+    active_category = request.GET.get('category')
+    
+    # 4. Latest articles (filtered by category if selected)
+    articles = Article.objects.filter(is_published=True)
+    if active_category:
+        articles = articles.filter(category__slug=active_category)
+    
+    articles = articles.order_by('-published_at')[:12]
+    
+    # 5. API News (World & India news)
+    api_news = FetchedNews.objects.filter(is_active=True).order_by('-published_at')[:20]
+    
+    # Add source_region to api_news for template filtering
+    for news in api_news:
+        if news.state and news.state.name:
+            # If it has a state, it's India news
+            news.source_region = "🇮🇳 India"
+        else:
+            # Otherwise it's world news
+            news.source_region = "🌍 World"
+    
+    # 6. Top services
+    top_services = Service.objects.filter(is_active=True).order_by('order')[:3]
+    
+    # 7. Sidebar advertisements (left sidebar - position='sidebar')
+    sidebar_ads = Advertisement.objects.filter(
+        is_active=True,
+        position='sidebar',
+        start_date__lte=timezone.now(),
+        end_date__gte=timezone.now()
+    ).order_by('?')[:5]  # Random order
+    
+    # 8. Bottom banner advertisements (position='inline' or 'footer')
+    bottom_banner_ads = Advertisement.objects.filter(
+        is_active=True,
+        position__in=['inline', 'footer'],
+        start_date__lte=timezone.now(),
+        end_date__gte=timezone.now()
+    ).order_by('?')[:3]  # Random order
+    
+    context = {
+        'featured': featured,
+        'trending': trending,
+        'categories': categories,
+        'active_category': active_category,
+        'articles': articles,
+        'api_news': api_news,
+        'top_services': top_services,
+        'sidebar_ads': sidebar_ads,
+        'bottom_banner_ads': bottom_banner_ads,
+    }
+    
+    return render(request, 'home.html', context)
 
-    query = request.GET.get('query', '')
-    category_slug = request.GET.get('category', '')
 
+# ==================== ARTICLE & CATEGORY ====================
+
+def article_detail(request, slug):
+    """Article detail page"""
+    article = get_object_or_404(Article, slug=slug, is_published=True)
+    
+    # Increment views
+    article.increment_views()
+    
+    # Get comments
+    comments = article.comments.all()
+    
+    # Related articles (same category)
+    related = Article.objects.filter(
+        category=article.category,
+        is_published=True
+    ).exclude(id=article.id)[:5]
+    
+    # Sidebar ads
+    sidebar_ads = Advertisement.objects.filter(
+        is_active=True,
+        position='sidebar'
+    ).order_by('?')[:5]
+    
+    context = {
+        'article': article,
+        'comments': comments,
+        'related': related,
+        'sidebar_ads': sidebar_ads,
+    }
+    return render(request, 'article_detail.html', context)
+
+
+def category_view(request, slug):
+    """Category articles"""
+    category = get_object_or_404(Category, slug=slug)
+    articles = Article.objects.filter(
+        category=category,
+        is_published=True
+    ).order_by('-published_at')
+    
+    paginator = Paginator(articles, 12)
+    page = request.GET.get('page', 1)
+    articles = paginator.get_page(page)
+    
+    context = {
+        'category': category,
+        'articles': articles,
+        'page_obj': articles,
+    }
+    return render(request, 'category_articles.html', context)
+
+
+def category_detail(request, slug):
+    """Category detail (alias for category_view)"""
+    return category_view(request, slug)
+
+
+# ==================== SEARCH & AUTHOR ====================
+
+def search_view(request):
+    """Search articles"""
+    query = request.GET.get('q', '')
+    
+    articles = Article.objects.filter(is_published=True)
+    
     if query:
         articles = articles.filter(
             Q(title__icontains=query) |
             Q(content__icontains=query) |
             Q(summary__icontains=query)
         )
-    if category_slug:
-        articles = articles.filter(category__slug=category_slug)
-
-    api_news = get_news_from_api(category=category_slug if category_slug else None)
-    featured = articles.first()
-
-    # Get trending articles, filtered by category if selected
-    if category_slug:
-        trending = articles.order_by('-views')[:5]
-    else:
-        trending = Article.objects.filter(is_published=True).order_by('-views')[:5]
-
-    latest = articles.order_by('-created_at')[:12]
-    banner_ads = Advertisement.objects.filter(position='banner_top', is_active=True)
-    sidebar_ads = Advertisement.objects.filter(position='sidebar', is_active=True)
-
-    return render(request, 'home.html', {
-        'articles': latest,
-        'featured': featured,
-        'trending': trending,
-        'categories': categories,
+    
+    articles = articles.order_by('-published_at')
+    
+    # Pagination
+    paginator = Paginator(articles, 12)
+    page = request.GET.get('page', 1)
+    articles = paginator.get_page(page)
+    
+    context = {
+        'articles': articles,
         'query': query,
-        'active_category': category_slug,
-        'banner_ads': banner_ads,
-        'sidebar_ads': sidebar_ads,
-        'api_news': api_news,
-    })
+        'page_obj': articles,
+    }
+    return render(request, 'search_results.html', context)
 
 
-def epaper(request):
-    """E-Paper landing page (DB + API + RSS fallback)"""
-    # 1) Manual mode / DB articles
-    db_articles = Article.objects.filter(is_published=True).order_by('-created_at')[:20]
-
-    # 2) API news (reuse existing NewsAPI integration)
-    # Optional: allow filtering by category through query param
-    category_slug = request.GET.get('category', '').strip() or None
-    api_news = get_news_from_api(category=category_slug)
-
-    # 3) RSS feed fallback (free/zero cost)
-    # We keep it very light: fetch + extract minimal fields.
-    rss_items = []
-    try:
-        import feedparser
-
-        rss_urls = [
-            # These are example RSS sources; you can update URLs any time.
-            # They must be RSS/Atom endpoints.
-            'https://indianexpress.com/indian-express-rss/',
-            'https://www.thehindu.com/rss/india/?service=rss',
-        ]
-
-        for url in rss_urls:
-            feed = feedparser.parse(url)
-            for e in getattr(feed, 'entries', [])[:10]:
-                rss_items.append({
-                    'title': getattr(e, 'title', '')[:300],
-                    'url': getattr(e, 'link', ''),
-                    'publishedAt': str(getattr(e, 'published', '')),
-                    'source': {'name': getattr(feed.feed, 'title', 'RSS')},
-                    'urlToImage': getattr(e, 'image', None) and getattr(e.image, 'url', None),
-                })
-    except Exception as _e:
-        rss_items = []
-
-    # Simple cache-friendly slice for rendering performance
-    api_news = api_news[:30] if api_news else []
-    rss_items = rss_items[:30] if rss_items else []
-
-    mode = (request.GET.get('mode') or 'both').lower()
-    # mode: db | api | rss | both
-    if mode == 'db':
-        api_news = []
-        rss_items = []
-    elif mode == 'api':
-        db_articles = Article.objects.none()
-        rss_items = []
-    elif mode == 'rss':
-        db_articles = Article.objects.none()
-        api_news = []
-    elif mode == 'both':
-        # keep all
-        pass
-
-    return render(request, 'epaper.html', {
-        'db_articles': db_articles,
-        'api_news': api_news,
-        'rss_items': rss_items,
-        'active_mode': mode,
-        'categories': Category.objects.all(),
-        'active_category': category_slug,
-    })
-
-
-
-def article_detail(request, slug):
-    """Show single article with comments"""
-    article = get_object_or_404(Article, slug=slug, is_published=True)
-    article.views += 1
-    article.save()
-    related = Article.objects.filter(
-        category=article.category, is_published=True
-    ).exclude(id=article.id)[:3]
-    comments = article.comments.all()
-    liked = False
-    if request.user.is_authenticated:
-        liked = Like.objects.filter(article=article, user=request.user).exists()
-    return render(request, 'article_detail.html', {
-        'article': article,
-        'related': related,
-        'comments': comments,
-        'liked': liked,
-        'like_count': article.likes.count(),
-        'ad_article_top': get_ads('article_top'),
-        'ad_article_bottom': get_ads('article_bottom'),
-        'ad_sidebar': get_ads('sidebar'),
-    })
-
-
-@login_required
-@user_passes_test(is_admin)
-def admin_dashboard(request):
-    """Admin dashboard"""
-    return render(request, 'admin_dashboard.html', {
-        'total_articles': Article.objects.count(),
-        'total_published': Article.objects.filter(is_published=True).count(),
-        'total_comments': Comment.objects.count(),
-        'total_likes': Like.objects.count(),
-        'total_subscribers': UserSubscription.objects.filter(is_active=True).count(),
-        'recent_articles': Article.objects.order_by('-created_at')[:10],
-        'recent_comments': Comment.objects.order_by('-created_at')[:10],
-        'top_articles': Article.objects.filter(is_published=True).order_by('-views')[:5],
-        'categories': Category.objects.all(),
-    })
-
-
-def category_view(request, slug):
-    """Show articles by category"""
-    category = get_object_or_404(Category, slug=slug)
-    articles = Article.objects.filter(category=category, is_published=True)
-    api_news = get_news_from_api(category=slug)
-    return render(request, 'category.html', {
-        'category': category,
+def author_profile(request, author_id):
+    """Author profile page"""
+    author = get_object_or_404(Author, id=author_id)
+    articles = author.articles.filter(is_published=True).order_by('-published_at')
+    
+    # Pagination
+    paginator = Paginator(articles, 12)
+    page = request.GET.get('page', 1)
+    articles = paginator.get_page(page)
+    
+    context = {
+        'author': author,
         'articles': articles,
-        'categories': Category.objects.all(),
-        'api_news': api_news,
-        'active_category': slug,
-        'ad_header': get_ads('banner_top'),
-    })
+        'page_obj': articles,
+    }
+    return render(request, 'author_profile.html', context)
 
 
-def search_view(request):
-    """Search articles"""
-    query = request.GET.get('query', '')
-    articles = []
-    if query:
-        articles = Article.objects.filter(
-            title__icontains=query
-        ) | Article.objects.filter(
-            content__icontains=query
+# ==================== AUTHENTICATION ====================
+
+def login_view(request):
+    """User login"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            context = {'error': 'Invalid credentials'}
+            return render(request, 'login.html', context)
+    
+    return render(request, 'login.html')
+
+
+def logout_view(request):
+    """User logout"""
+    logout(request)
+    return redirect('landing')
+
+
+def register_view(request):
+    """User registration"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        password2 = request.POST.get('password2')
+        
+        if password != password2:
+            context = {'error': 'Passwords do not match'}
+            return render(request, 'register.html', context)
+        
+        if User.objects.filter(username=username).exists():
+            context = {'error': 'Username already exists'}
+            return render(request, 'register.html', context)
+        
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
         )
-    return render(request, 'search.html', {
-        'articles': articles,
-        'query': query
-    })
+        
+        # Create user profile
+        UserProfile.objects.create(user=user)
+        
+        login(request, user)
+        return redirect('home')
+    
+    return render(request, 'register.html')
 
+
+# ==================== COMMENTS & LIKES ====================
 
 @login_required
 def add_comment(request, slug):
     """Add comment to article"""
-    article = get_object_or_404(Article, slug=slug, is_published=True)
+    article = get_object_or_404(Article, slug=slug)
+    
     if request.method == 'POST':
-        content = request.POST.get('content', '').strip()
+        content = request.POST.get('content', '')
+        
         if content:
-            Comment.objects.create(article=article, user=request.user, content=content)
-            messages.success(request, 'Comment posted!')
-        else:
-            messages.error(request, 'Comment cannot be empty.')
+            Comment.objects.create(
+                article=article,
+                user=request.user,
+                content=content
+            )
+    
     return redirect('article_detail', slug=slug)
 
 
 @login_required
 def like_article(request, slug):
     """Like/unlike article"""
-    if request.method == 'POST':
-        article = get_object_or_404(Article, slug=slug)
-        like, created = Like.objects.get_or_create(article=article, user=request.user)
-        if not created:
-            like.delete()
-            liked = False
-        else:
-            liked = True
-        return JsonResponse({'liked': liked, 'count': article.likes.count()})
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+    article = get_object_or_404(Article, slug=slug)
+    
+    like, created = Like.objects.get_or_create(
+        article=article,
+        user=request.user
+    )
+    
+    if not created:
+        like.delete()
+    
+    return redirect('article_detail', slug=slug)
 
 
-def author_profile(request, author_id):
-    """Show author profile and articles"""
-    author = get_object_or_404(Author, id=author_id)
-    articles = Article.objects.filter(author=author, is_published=True)
-    return render(request, 'author_profile.html', {
-        'author': author,
+# ==================== LOCATION FILTERING - API ENDPOINTS ====================
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def api_get_states(request):
+    """Get all states - JSON API"""
+    states = list(State.objects.all().values('id', 'name', 'code', 'slug'))
+    return JsonResponse(states, safe=False)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def api_get_districts(request):
+    """Get districts by state - JSON API"""
+    state_id = request.GET.get('state_id')
+    
+    if not state_id:
+        return JsonResponse({'error': 'state_id required'}, status=400)
+    
+    districts = list(District.objects.filter(
+        state_id=state_id
+    ).values('id', 'name', 'code', 'slug'))
+    
+    return JsonResponse(districts, safe=False)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def api_get_blocks(request):
+    """Get blocks by district - JSON API"""
+    district_id = request.GET.get('district_id')
+    
+    if not district_id:
+        return JsonResponse({'error': 'district_id required'}, status=400)
+    
+    blocks = list(Block.objects.filter(
+        district_id=district_id
+    ).values('id', 'name', 'code', 'slug'))
+    
+    return JsonResponse(blocks, safe=False)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def api_get_villages(request):
+    """Get villages by block - JSON API"""
+    block_id = request.GET.get('block_id')
+    
+    if not block_id:
+        return JsonResponse({'error': 'block_id required'}, status=400)
+    
+    villages = list(Village.objects.filter(
+        block_id=block_id
+    ).values('id', 'name', 'code', 'slug'))
+    
+    return JsonResponse(villages, safe=False)
+
+
+def state_news_api(request, state_id):
+    """Get districts for state (URL pattern alias)"""
+    request.GET = request.GET.copy()
+    request.GET['state_id'] = state_id
+    return api_get_districts(request)
+
+
+def district_news_api(request, district_id):
+    """Get blocks for district (URL pattern alias)"""
+    request.GET = request.GET.copy()
+    request.GET['district_id'] = district_id
+    return api_get_blocks(request)
+
+
+# ==================== NEWS BY LOCATION ====================
+
+def news_by_location(request):
+    """Filter news by location - STATE > DISTRICT > BLOCK > VILLAGE"""
+    state_id = request.GET.get('state')
+    district_id = request.GET.get('district')
+    block_id = request.GET.get('block')
+    village_id = request.GET.get('village')
+    
+    # Filter articles by location
+    articles = Article.objects.filter(is_published=True)
+    
+    if state_id:
+        articles = articles.filter(state_id=state_id)
+    if district_id:
+        articles = articles.filter(district_id=district_id)
+    if block_id:
+        articles = articles.filter(block_id=block_id)
+    if village_id:
+        articles = articles.filter(village_id=village_id)
+    
+    articles = articles.order_by('-published_at')
+    
+    # Filter fetched news by location
+    fetched_news = FetchedNews.objects.filter(is_active=True)
+    
+    if state_id:
+        fetched_news = fetched_news.filter(state_id=state_id)
+    if district_id:
+        fetched_news = fetched_news.filter(district_id=district_id)
+    if block_id:
+        fetched_news = fetched_news.filter(block_id=block_id)
+    if village_id:
+        fetched_news = fetched_news.filter(village_id=village_id)
+    
+    fetched_news = fetched_news.order_by('-published_at')
+    
+    # Get location details for display
+    location_name = ""
+    try:
+        if state_id:
+            state = State.objects.get(id=state_id)
+            location_name = state.name
+        if district_id:
+            district = District.objects.get(id=district_id)
+            location_name += f" - {district.name}"
+        if block_id:
+            block = Block.objects.get(id=block_id)
+            location_name += f" - {block.name}"
+        if village_id:
+            village = Village.objects.get(id=village_id)
+            location_name += f" - {village.name}"
+    except:
+        location_name = "Selected Location"
+    
+    # Pagination
+    paginator = Paginator(articles, 12)
+    page = request.GET.get('page', 1)
+    articles = paginator.get_page(page)
+    
+    context = {
         'articles': articles,
-        'categories': Category.objects.all(),
-    })
+        'fetched_news': fetched_news,
+        'location_name': location_name,
+        'page_obj': articles,
+        'filters': {
+            'state': state_id,
+            'district': district_id,
+            'block': block_id,
+            'village': village_id,
+        }
+    }
+    
+    return render(request, 'news_by_location.html', context)
 
 
-def ad_click(request, ad_id):
-    """Redirect to ad URL and increment click count"""
-    ad = get_object_or_404(Advertisement, id=ad_id)
-    ad.clicks += 1
-    ad.save()
-    return redirect(ad.url or '/')
+def location_news(request):
+    """Location news (alias for news_by_location)"""
+    return news_by_location(request)
 
 
-# ============================================================================
-# AUTHENTICATION VIEWS
-# ============================================================================
+# ==================== API ENDPOINTS FOR NEWS ====================
 
-def register_view(request):
-    """User registration"""
-    if request.user.is_authenticated:
-        return redirect('home')
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, 'Account created successfully!')
-            return redirect('home')
-        else:
-            messages.error(request, 'Please fix the errors below.')
-    else:
-        form = UserCreationForm()
-    return render(request, 'register.html', {
-        'form': form,
-        'categories': Category.objects.all()
-    })
-
-
-def login_view(request):
-    """User login"""
-    if request.user.is_authenticated:
-        return redirect('home')
-    if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            login(request, form.get_user())
-            messages.success(request, 'Welcome back!')
-            return redirect('home')
-        else:
-            messages.error(request, 'Invalid username or password.')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'login.html', {
-        'form': form,
-        'categories': Category.objects.all()
-    })
+def api_get_news_by_location(request):
+    """API: Get articles by location (JSON)"""
+    state_id = request.GET.get('state')
+    district_id = request.GET.get('district')
+    block_id = request.GET.get('block')
+    village_id = request.GET.get('village')
+    
+    articles = Article.objects.filter(is_published=True)
+    
+    if state_id:
+        articles = articles.filter(state_id=state_id)
+    if district_id:
+        articles = articles.filter(district_id=district_id)
+    if block_id:
+        articles = articles.filter(block_id=block_id)
+    if village_id:
+        articles = articles.filter(village_id=village_id)
+    
+    data = [{
+        'id': a.id,
+        'title': a.title,
+        'slug': a.slug,
+        'author': a.author.name if a.author else '',
+        'views': a.views,
+        'published_at': a.published_at.isoformat() if a.published_at else ''
+    } for a in articles.order_by('-published_at')[:50]]
+    
+    return JsonResponse(data, safe=False)
 
 
-def logout_view(request):
-    """User logout"""
-    logout(request)
-    messages.info(request, 'You have been logged out.')
-    return redirect('home')
+def api_fetch_news_for_location(request):
+    """API: Get fetched news by location (JSON)"""
+    state_id = request.GET.get('state')
+    district_id = request.GET.get('district')
+    block_id = request.GET.get('block')
+    village_id = request.GET.get('village')
+    
+    news = FetchedNews.objects.filter(is_active=True)
+    
+    if state_id:
+        news = news.filter(state_id=state_id)
+    if district_id:
+        news = news.filter(district_id=district_id)
+    if block_id:
+        news = news.filter(block_id=block_id)
+    if village_id:
+        news = news.filter(village_id=village_id)
+    
+    data = [{
+        'id': n.id,
+        'title': n.title,
+        'description': n.description,
+        'source': n.source_name,
+        'image': n.image_url,
+        'published_at': n.published_at.isoformat() if n.published_at else ''
+    } for n in news.order_by('-published_at')[:50]]
+    
+    return JsonResponse(data, safe=False)
 
 
-# ============================================================================
-# SIGNALS
-# ============================================================================
-
-@receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
-    """Create UserProfile when User is created"""
-    if created:
-        UserProfile.objects.get_or_create(user=instance)
+def get_all_states(request):
+    """Get all states (alias)"""
+    return api_get_states(request)
 
 
-# ============================================================================
-# SUBSCRIPTION & PAYMENT VIEWS
-# ============================================================================
+def get_all_districts(request):
+    """Get all districts (alias)"""
+    return api_get_districts(request)
+
+
+def fetch_news_by_state(request):
+    """Fetch news by state (alias)"""
+    return api_get_news_by_location(request)
+
+
+def fetch_news_by_district(request):
+    """Fetch news by district (alias)"""
+    return api_get_news_by_location(request)
+
+
+# ==================== SERVICES ====================
+
+def services(request):
+    """Services page"""
+    services = Service.objects.filter(is_active=True).order_by('order')
+    
+    context = {
+        'services': services,
+    }
+    return render(request, 'services.html', context)
+
+
+# ==================== SUBSCRIPTION & PAYMENT ====================
 
 def subscription_plans(request):
-    """Show subscription plans"""
-    plans = SubscriptionPlan.objects.filter(is_active=True)
-    user_sub = None
-    if request.user.is_authenticated:
-        user_sub = UserSubscription.objects.filter(
-            user=request.user, is_active=True
-        ).order_by('-start_date').first()
-    return render(request, 'subscription.html', {
+    """Subscription plans page"""
+    plans = SubscriptionPlan.objects.filter(is_active=True).order_by('price')
+    
+    context = {
         'plans': plans,
-        'user_sub': user_sub,
-        'categories': Category.objects.all(),
-    })
+    }
+    return render(request, 'subscription_plans.html', context)
 
 
 @login_required
 def subscribe(request, plan_id):
-    """Confirm subscription"""
-    plan = get_object_or_404(SubscriptionPlan, id=plan_id, is_active=True)
-    coupon = request.GET.get('coupon', '').strip()
-    if request.method == 'POST':
-        # Preserve coupon parameter when redirecting to checkout
-        url = reverse('upi_checkout', args=[plan.id])
-        if coupon:
-            url += '?' + urlencode({'coupon': coupon})
-        return redirect(url)
-    return render(request, 'subscribe_confirm.html', {
-        'plan': plan,
-        'categories': Category.objects.all(),
-        'coupon': coupon,
-    })
+    """Subscribe to plan"""
+    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+    
+    # Calculate end date
+    end_date = timezone.now() + timedelta(days=plan.duration_days)
+    
+    # Create or update subscription
+    subscription, created = UserSubscription.objects.update_or_create(
+        user=request.user,
+        defaults={
+            'plan': plan,
+            'end_date': end_date,
+            'is_active': True
+        }
+    )
+    
+    return redirect('payment_success')
 
 
+@login_required
 def generate_payment_link(request, plan_id):
-    """Generate a shareable subscription link, optionally with coupon code"""
-    plan = get_object_or_404(SubscriptionPlan, id=plan_id, is_active=True)
-    coupon = request.GET.get('coupon', '').strip()
-    path = reverse('subscribe', args=[plan.id])
-    url = request.build_absolute_uri(path)
-    if coupon:
-        url += '?' + urlencode({'coupon': coupon})
-    return JsonResponse({'link': url, 'plan': plan.name, 'price': str(plan.price)})
+    """Generate payment link"""
+    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+    
+    context = {
+        'plan': plan,
+    }
+    return render(request, 'payment_link.html', context)
 
 
 @login_required
 def save_upi(request):
-    """Save user's UPI ID"""
-    plan_id = request.GET.get('next_plan', '1')
+    """Save UPI ID"""
     if request.method == 'POST':
-        upi_id = request.POST.get('upi_id', '').strip()
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        upi_id = request.POST.get('upi_id')
+        
+        profile = request.user.profile
         profile.upi_id = upi_id
         profile.save()
-        messages.success(request, 'UPI ID saved successfully!')
-        return redirect('upi_checkout', plan_id=plan_id)
-    return render(request, 'save_upi.html', {
-        'categories': Category.objects.all(),
-        'plan_id': plan_id
-    })
+        
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'success': False})
 
 
 @login_required
 def upi_checkout(request, plan_id):
-    """
-    Complete UPI checkout with:
-    - QR code generation
-    - Coupon code support
-    - Payment verification
-    - Proper bank integration
-    """
+    """UPI checkout"""
     plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+    
+    context = {
+        'plan': plan,
+    }
+    return render(request, 'upi_checkout.html', context)
 
-    # 1. Get user's UPI ID
-    try:
-        user_upi = request.user.userprofile.upi_id
-    except:
-        user_upi = None
 
-    if not user_upi:
-        messages.warning(request, 'Please save your UPI ID before checkout!')
-        return redirect(f"/save-upi/?next_plan={plan.id}")
-
-    # 2. Handle coupon code (support shareable link via GET and form input via POST)
-    coupon = None
-    discount = 0
-    final_amount = float(plan.price)
-    # Prefer coupon from GET (shareable link) else from POST form
-    coupon_code = request.GET.get('coupon', '').strip() or (request.POST.get('coupon_code', '').strip() if request.method == 'POST' else '')
-
-    if coupon_code:
-        try:
-            coupon = Coupon.objects.get(code=coupon_code, is_active=True)
-            if coupon.is_expired():
-                messages.error(request, 'This coupon has expired!')
-                coupon = None
-            elif not coupon.can_apply_to_plan(plan):
-                messages.error(request, 'Coupon cannot be applied to this plan!')
-                coupon = None
-            else:
-                if coupon.discount_percent:
-                    discount = (float(plan.price) * coupon.discount_percent) / 100
-                else:
-                    discount = float(coupon.discount_amount or 0)
-                final_amount = float(plan.price) - discount
-                messages.success(request, f'Coupon applied! Discount: ₹{discount:.2f}')
-        except Coupon.DoesNotExist:
-            messages.error(request, 'Invalid coupon code!')
-            coupon = None
-
-    # 3. Handle form submission (POST) - Payment processing
-    if request.method == 'POST' and 'transaction_id' in request.POST:
-        txn_id = request.POST.get('transaction_id', '').strip()
-
-        if not txn_id:
-            messages.error(request, 'Transaction ID is required!')
-            return render(request, 'upi_checkout.html', {
-                'plan': plan,
-                'user_upi_id': user_upi,
-                'final_amount': final_amount,
-                'coupon': coupon,
-                'categories': Category.objects.all(),
-            })
-
-        # Check if transaction already exists
-        if services.verify_payment_integrity(txn_id):
-            messages.error(request, 'This transaction ID has already been used.')
-            return render(request, 'upi_checkout.html', {
-                'plan': plan,
-                'user_upi_id': user_upi,
-                'final_amount': final_amount,
-                'coupon': coupon,
-                'categories': Category.objects.all(),
-            })
-
-        # Create payment record
-        payment = services.create_payment_record(
-            request.user,
-            txn_id,
-            final_amount,
-            coupon
+@login_required
+def upi_confirm(request, plan_id):
+    """Confirm UPI payment"""
+    if request.method == 'POST':
+        plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+        
+        # Create UPI payment record
+        upi_payment = UPIPayment.objects.create(
+            user=request.user,
+            upi_id=request.user.profile.upi_id or 'N/A',
+            amount=plan.price,
+            transaction_ref_id=str(uuid.uuid4()),
+            status='success'
         )
-
-        # Activate subscription
+        
+        # Create subscription
         end_date = timezone.now() + timedelta(days=plan.duration_days)
         UserSubscription.objects.update_or_create(
             user=request.user,
@@ -578,478 +649,198 @@ def upi_checkout(request, plan_id):
                 'is_active': True
             }
         )
-
-        messages.success(request, f'✅ Payment successful! {plan.name} subscription is now active!')
-        return redirect('payment_history')
-
-    # 4. Generate QR code for UPI payment
-    owner_upi = "8434117879@ybl"  # Replace with your actual UPI ID
-    upi_link = f"upi://pay?pa={owner_upi}&pn=NewsPortal&am={final_amount:.2f}&cu=INR&tr={plan.id}"
-
-    # Generate QR code image
-    qr_code_base64 = generate_qr_code(upi_link)
-
-    # 5. GET request - Show checkout form
-    return render(request, 'upi_checkout.html', {
-        'plan': plan,
-        'owner_upi': owner_upi,
-        'user_upi_id': user_upi,
-        'upi_link': upi_link,
-        'qr_code': qr_code_base64,
-        'final_amount': final_amount,
-        'original_amount': float(plan.price),
-        'discount': discount,
-        'coupon': coupon,
-        'categories': Category.objects.all(),
-    })
+        
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'success': False})
 
 
 @login_required
-def upi_confirm(request, plan_id):
-    """
-    Deprecated - use upi_checkout instead
-    This function is kept for backward compatibility
-    """
-    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+def payment_success(request):
+    """Payment success page"""
+    context = {}
+    return render(request, 'payment_success.html', context)
 
-    if request.method == 'POST':
-        txn_id = request.POST.get('transaction_id', '').strip()
-        if txn_id:
-            end_date = timezone.now() + timedelta(days=plan.duration_days)
-            UserSubscription.objects.update_or_create(
-                user=request.user,
-                defaults={'plan': plan, 'end_date': end_date, 'is_active': True}
-            )
-            messages.success(request, f'Payment verified! {plan.name} subscription is now active!')
-            return redirect('payment_success')
-        else:
-            messages.error(request, 'Transaction verification failed.')
 
-    return redirect('upi_checkout', plan_id=plan.id)
+@login_required
+def payment_receipt(request, txn_id):
+    """Payment receipt"""
+    payment = get_object_or_404(Payment, transaction_id=txn_id, user=request.user)
+    
+    context = {
+        'payment': payment,
+    }
+    return render(request, 'payment_receipt.html', context)
 
 
 @login_required
 def payment_history(request):
-    """Display user's payment history with period filtering and download"""
-    # Get period from request
-    period = request.GET.get('period', 'all')
+    """Payment history"""
+    payments = Payment.objects.filter(user=request.user).order_by('-created_at')
     
-    # Check if download requested
-    if request.GET.get('download'):
-        all_payments = Payment.objects.filter(user=request.user).select_related('plan', 'coupon')
-        filtered_payments = TransactionManager.filter_transactions(all_payments, period)
-        return TransactionManager.export_to_csv_response(
-            filtered_payments, 
-            period, 
-            f"{request.user.username}_transactions"
-        )
+    # Pagination
+    paginator = Paginator(payments, 10)
+    page = request.GET.get('page', 1)
+    payments = paginator.get_page(page)
     
-    # Get transaction context with all periods
-    all_payments = Payment.objects.filter(user=request.user).select_related('plan', 'coupon').order_by('-created_at')
-    subscriptions = UserSubscription.objects.filter(user=request.user).select_related('plan')
-    
-    # Filter by selected period
-    filtered_payments = TransactionManager.filter_transactions(all_payments, period)
-    stats = TransactionManager.get_transaction_stats(filtered_payments)
-    
-    # Get data for all periods for display
-    period_data = {}
-    for p in ['week', 'month', 'year', 'all']:
-        p_filtered = TransactionManager.filter_transactions(all_payments, p)
-        period_data[p] = {
-            'count': p_filtered.count(),
-            'total': sum([x.final_amount for x in p_filtered.filter(status='completed')]) if p_filtered.exists() else 0,
-            'display_name': TransactionManager.get_period_display(p),
-        }
-
     context = {
-        'payments': filtered_payments,
-        'subscriptions': subscriptions,
-        'categories': Category.objects.all(),
-        'current_period': period,
-        'period_data': period_data,
-        'stats': stats,
-        'periods': ['week', 'month', 'year', 'all'],
+        'payments': payments,
+        'page_obj': payments,
     }
     return render(request, 'payment_history.html', context)
 
 
-def payment_success(request):
-    """Payment success page"""
-    return render(request, 'payment_success.html')
+# ==================== EPAPER ====================
 
-
-@login_required
-def dashboard_view(request):
-    """User dashboard"""
-    return render(request, 'dashboard.html')
-
-
-# ============================================================================
-# ADMIN SUBSCRIPTION & PAYMENT TRACKING VIEWS
-# ============================================================================
-
-@login_required
-@user_passes_test(is_admin)
-def admin_subscriptions(request):
-    """Admin view: Track all user subscriptions and payments"""
-    # Get all active subscriptions
-    subscriptions = UserSubscription.objects.filter(is_active=True).select_related(
-        'user', 'plan'
-    ).prefetch_related('user__payments')
-
-    # Get all payments
-    payments = Payment.objects.all().select_related(
-        'user', 'plan', 'coupon'
-    ).order_by('-created_at')
-
-    # Statistics
-    stats = {
-        'total_subscribers': subscriptions.count(),
-        'active_subscriptions': subscriptions.filter(is_active=True).count(),
-        'total_payments': payments.count(),
-        'completed_payments': payments.filter(status='completed').count(),
-        'total_revenue': sum([p.final_amount for p in payments.filter(status='completed')]),
-    }
-
-    context = {
-        'subscriptions': subscriptions,
-        'payments': payments[:50],  # Show latest 50
-        'stats': stats,
-        'categories': Category.objects.all(),
-    }
-    return render(request, 'admin_subscriptions.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def admin_coupons(request):
-    """Admin view: Manage coupon codes"""
-    coupons = Coupon.objects.all().order_by('-created_at')
-
-    # Statistics
-    stats = {
-        'total_coupons': coupons.count(),
-        'active_coupons': coupons.filter(is_active=True).count(),
-        'expired_coupons': coupons.filter(is_active=False).count(),
-    }
-
-    context = {
-        'coupons': coupons,
-        'stats': stats,
-        'categories': Category.objects.all(),
-    }
-    return render(request, 'admin_coupons.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def admin_payment_history(request):
-    """Admin view: Complete payment history with period filtering and download"""
-    # Get period from request
-    period = request.GET.get('period', 'all')
-    
-    # Check if download requested
-    if request.GET.get('download'):
-        all_payments = Payment.objects.all().select_related('user', 'plan', 'coupon')
-        filtered_payments = TransactionManager.filter_transactions(all_payments, period)
-        return TransactionManager.export_to_csv_response(
-            filtered_payments, 
-            period, 
-            "admin_all_transactions"
-        )
-    
-    # Get all payments with related data
-    all_payments = Payment.objects.all().select_related(
-        'user', 'plan', 'coupon'
-    ).order_by('-created_at')
-
-    # Filters
-    status_filter = request.GET.get('status', '')
-    coupon_filter = request.GET.get('coupon', '')
-    payment_method_filter = request.GET.get('method', '')
-
-    payments = all_payments
-    if status_filter:
-        payments = payments.filter(status=status_filter)
-    if coupon_filter:
-        payments = payments.filter(coupon__code__icontains=coupon_filter)
-    if payment_method_filter:
-        payments = payments.filter(payment_method=payment_method_filter)
-    
-    # Apply period filter
-    payments = TransactionManager.filter_transactions(payments, period)
-
-    # Statistics for selected period (not all time)
-    total_payments = payments.count()
-    completed_payments = payments.filter(status='completed')
-    total_revenue = sum([p.final_amount for p in completed_payments])
-    total_discount = sum([p.discount_amount for p in completed_payments])
-    avg_payment = total_revenue / len(completed_payments) if completed_payments else 0
-
-    # Period-wise stats
-    period_stats = {}
-    for p in ['week', 'month', 'year', 'all']:
-        p_filtered = TransactionManager.filter_transactions(all_payments, p)
-        p_completed = p_filtered.filter(status='completed')
-        period_stats[p] = {
-            'count': p_filtered.count(),
-            'completed': p_completed.count(),
-            'revenue': sum([x.final_amount for x in p_completed]),
-            'display_name': TransactionManager.get_period_display(p),
-        }
-
-    # Coupon usage stats (period-specific)
-    coupon_stats = Coupon.objects.filter(
-        payment__in=payments
-    ).annotate(
-        usage_count=models.Count('payment'),
-        total_discount=models.Sum('payment__discount_amount')
-    ).order_by('-usage_count')[:10]
-
-    # Payment method breakdown (period-specific)
-    from django.db.models import Count, Sum
-    method_stats = payments.filter(status='completed').values(
-        'payment_method'
-    ).annotate(
-        count=Count('id'),
-        total=Sum('final_amount')
-    )
-
-    context = {
-        'payments': payments,
-        'stats': {
-            'total': total_payments,
-            'completed': completed_payments.count(),
-            'revenue': total_revenue,
-            'discount': total_discount,
-            'avg': avg_payment,
-        },
-        'period_stats': period_stats,
-        'current_period': period,
-        'coupon_stats': coupon_stats,
-        'method_stats': method_stats,
-        'categories': Category.objects.all(),
-        'filters': {
-            'status': status_filter,
-            'coupon': coupon_filter,
-            'method': payment_method_filter,
-        },
-        'periods': ['week', 'month', 'year', 'all'],
-    }
-    return render(request, 'admin_payment_history.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def user_subscription_detail(request, user_id):
-    """Admin view: Detailed subscription & payment info for a specific user"""
-    user = get_object_or_404(User, id=user_id)
-    subscriptions = UserSubscription.objects.filter(user=user).select_related('plan')
-    payments = Payment.objects.filter(user=user).select_related('plan', 'coupon').order_by('-created_at')
-
-    total_spent = sum([p.final_amount for p in payments.filter(status='completed')])
-
-    context = {
-        'user': user,
-        'subscriptions': subscriptions,
-        'payments': payments,
-        'total_spent': total_spent,
-        'categories': Category.objects.all(),
-    }
-    return render(request, 'user_subscription_detail.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def generate_share_links(request):
-    """Admin view: Generate shareable payment links for all coupon & plan combinations"""
-    plans = SubscriptionPlan.objects.filter(is_active=True)
-    coupons = Coupon.objects.filter(is_active=True)
-    
-    # Build domain
-    protocol = 'https' if request.is_secure() else 'http'
-    domain = request.get_host()
-    
-    links = []
-    
-    # Generate links for each plan + coupon combination
-    for plan in plans:
-        for coupon in coupons:
-            path = reverse('subscribe', args=[plan.id])
-            url = f"{protocol}://{domain}{path}?coupon={coupon.code}"
-            links.append({
-                'plan_name': plan.name,
-                'plan_price': plan.price,
-                'coupon_code': coupon.code,
-                'coupon_discount': f"{coupon.discount_percent}%" if coupon.discount_percent else f"₹{coupon.discount_amount}",
-                'url': url,
-            })
-        
-        # Also generate link without coupon
-        path = reverse('subscribe', args=[plan.id])
-        url = f"{protocol}://{domain}{path}"
-        links.append({
-            'plan_name': plan.name,
-            'plan_price': plan.price,
-            'coupon_code': 'None (Full Price)',
-            'coupon_discount': 'No Discount',
-            'url': url,
-        })
-    
-    context = {
-        'links': links,
-        'plans': plans,
-        'coupons': coupons,
-        'domain': domain,
-        'categories': Category.objects.all(),
-    }
-    return render(request, 'admin_share_links.html', context)
-# views.py
-
-
-# RSS Feeds (Free, No API Key Needed)
-RSS_FEEDS = {
-    'The Hindu': 'https://www.thehindu.com/news/national/?service=rss',
-    'Indian Express': 'https://indianexpress.com/feed',
-    'Patrika': 'https://patrika.com/rss/breaking-news',
-    'NDTV': 'https://feeds.ndtv.com/ndtv/latest.xml',
-    'BBC News': 'http://feeds.bbc.co.uk/news/rss.xml',
-}
-
-@cache_page(60 * 5)  # Cache for 5 minutes
 def epaper(request):
-    """
-    Simply load and display e-paper content
-    No modes, no filters - just click and view
-    """
-    articles = get_epaper_content()
-    
-    return render(request, 'epaper_simple.html', {
-        'articles': articles,
-    })
-
-def get_epaper_content():
-    """
-    Fetch content from RSS feeds automatically
-    """
-    articles = []
-    
-    for source_name, feed_url in RSS_FEEDS.items():
-        try:
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:5]:  # 5 articles per source
-                articles.append({
-                    'title': entry.get('title', 'No Title'),
-                    'summary': entry.get('summary', '')[:300],  # 300 chars
-                    'link': entry.get('link', '#'),
-                    'published': entry.get('published', 'Unknown'),
-                    'author': entry.get('author', source_name),
-                    'source': source_name,
-                })
-        except Exception as e:
-            print(f"Error fetching {source_name}: {e}")
-            continue
-    
-    return articles
+    """E-Paper page"""
+    context = {}
+    return render(request, 'epaper.html', context)
 
 
-# ============================================================================
-# LOCATION API VIEWS
-# ============================================================================
+# ==================== ADMIN DASHBOARD ====================
 
-def api_get_states(request):
-    """API endpoint to get all states"""
-    states = State.objects.all().values('id', 'name', 'code').order_by('name')
-    return JsonResponse({'states': list(states)})
-
-
-def api_get_districts(request):
-    """API endpoint to get districts for a state"""
-    state_id = request.GET.get('state_id')
-
-    if not state_id:
-        return JsonResponse({'error': 'state_id is required'}, status=400)
-
-    try:
-        districts = District.objects.filter(
-            state_id=state_id
-        ).values('id', 'name', 'state__name').order_by('name')
-        return JsonResponse({'districts': list(districts)})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
-
-
-def api_get_blocks(request):
-    """API endpoint to get blocks for a district"""
-    district_id = request.GET.get('district_id')
-
-    if not district_id:
-        return JsonResponse({'error': 'district_id is required'}, status=400)
-
-    try:
-        blocks = Block.objects.filter(
-            district_id=district_id
-        ).values('id', 'name', 'district__name').order_by('name')
-        return JsonResponse({'blocks': list(blocks)})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
-
-
-def api_get_news_by_location(request):
-    """API endpoint to get news filtered by location"""
-    state_id = request.GET.get('state_id')
-    district_id = request.GET.get('district_id')
-    category = request.GET.get('category', '')
-    limit = int(request.GET.get('limit', 20))
-
-    try:
-        query = FetchedNews.objects.filter(is_active=True)
-
-        if state_id:
-            query = query.filter(state_id=state_id)
-
-        if district_id:
-            query = query.filter(district_id=district_id)
-
-        if category:
-            query = query.filter(category__icontains=category)
-
-        news = query.order_by('-published_at')[:limit].values(
-            'id', 'title', 'description', 'image_url', 'source_url',
-            'source_name', 'category', 'published_at', 'views'
-        )
-
-        return JsonResponse({'news': list(news), 'count': len(list(news))})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
-
-
-def api_fetch_news_for_location(request):
-    """Manually trigger news fetch for a specific location"""
+@login_required
+def admin_dashboard(request):
+    """Admin dashboard"""
     if not request.user.is_staff:
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
+        return redirect('home')
+    
+    context = {
+        'total_articles': Article.objects.count(),
+        'total_users': User.objects.count(),
+        'total_comments': Comment.objects.count(),
+        'total_subscriptions': UserSubscription.objects.filter(is_active=True).count(),
+    }
+    return render(request, 'admin/dashboard.html', context)
 
-    state_id = request.GET.get('state_id')
-    district_id = request.GET.get('district_id')
-    category = request.GET.get('category', '')
 
-    try:
-        from .api_services import NewsDataService
+@login_required
+def admin_subscriptions(request):
+    """Admin subscriptions"""
+    if not request.user.is_staff:
+        return redirect('home')
+    
+    subscriptions = UserSubscription.objects.all().order_by('-start_date')
+    
+    # Pagination
+    paginator = Paginator(subscriptions, 20)
+    page = request.GET.get('page', 1)
+    subscriptions = paginator.get_page(page)
+    
+    context = {
+        'subscriptions': subscriptions,
+        'page_obj': subscriptions,
+    }
+    return render(request, 'admin/subscriptions.html', context)
 
-        state = State.objects.get(id=state_id) if state_id else None
-        district = District.objects.get(id=district_id) if district_id else None
 
-        state_name = state.name if state else None
-        district_name = district.name if district else None
+@login_required
+def admin_coupons(request):
+    """Admin coupons"""
+    if not request.user.is_staff:
+        return redirect('home')
+    
+    coupons = Coupon.objects.all().order_by('-valid_until')
+    context = {'coupons': coupons}
+    return render(request, 'admin/coupons.html', context)
 
-        count = NewsDataService.fetch_and_store_news(
-            state_name=state_name,
-            district_name=district_name,
-            category=category if category else None
+
+@login_required
+def admin_payment_history(request):
+    """Admin payment history"""
+    if not request.user.is_staff:
+        return redirect('home')
+    
+    payments = Payment.objects.all().order_by('-created_at')
+    
+    # Pagination
+    paginator = Paginator(payments, 20)
+    page = request.GET.get('page', 1)
+    payments = paginator.get_page(page)
+    
+    context = {
+        'payments': payments,
+        'page_obj': payments,
+    }
+    return render(request, 'admin/payment_history.html', context)
+
+
+@login_required
+def generate_share_links(request):
+    """Generate share links"""
+    if not request.user.is_staff:
+        return redirect('home')
+    
+    context = {}
+    return render(request, 'admin/share_links.html', context)
+
+
+@login_required
+def user_subscription_detail(request, user_id):
+    """User subscription detail"""
+    if not request.user.is_staff:
+        return redirect('home')
+    
+    subscription = get_object_or_404(UserSubscription, user_id=user_id)
+    context = {'subscription': subscription}
+    return render(request, 'admin/user_subscription_detail.html', context)
+
+
+# ==================== INFORMATION PAGES ====================
+
+def about_us(request):
+    """About us page"""
+    return render(request, 'about.html')
+
+
+def contact_us(request):
+    """Contact us page"""
+    if request.method == 'POST':
+        ContactMessage.objects.create(
+            name=request.POST.get('name', ''),
+            email=request.POST.get('email', ''),
+            phone=request.POST.get('phone', ''),
+            subject=request.POST.get('subject', ''),
+            message=request.POST.get('message', ''),
         )
+        return redirect('home')
+    
+    return render(request, 'contact.html')
 
-        return JsonResponse({'success': True, 'articles_added': count})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+
+def advertise(request):
+    """Advertise page"""
+    return render(request, 'advertise.html')
+
+
+def privacy_policy(request):
+    """Privacy policy"""
+    return render(request, 'privacy_policy.html')
+
+
+def terms_of_use(request):
+    """Terms of use"""
+    return render(request, 'terms_of_use.html')
+
+
+def cookie_policy(request):
+    """Cookie policy"""
+    return render(request, 'cookie_policy.html')
+
+
+def feedback(request):
+    """Feedback page"""
+    if request.method == 'POST':
+        Feedback.objects.create(
+            name=request.POST.get('name', ''),
+            email=request.POST.get('email', ''),
+            phone=request.POST.get('phone', ''),
+            feedback_type=request.POST.get('feedback_type', 'suggestion'),
+            subject=request.POST.get('subject', ''),
+            message=request.POST.get('message', ''),
+            rating=request.POST.get('rating'),
+        )
+        return redirect('home')
+    
+    return render(request, 'feedback.html')

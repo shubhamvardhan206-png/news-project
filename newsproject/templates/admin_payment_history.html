@@ -229,6 +229,114 @@
 
   .row-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
 
+  /* DROPDOWN STYLES */
+  .dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 8px;
+  }
+
+  .dropdown-menu.active {
+    display: block;
+  }
+
+  .dropdown-search {
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: white;
+  }
+
+  .dropdown-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .dropdown-search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+  }
+
+  .dropdown-items {
+    padding: 8px 0;
+  }
+
+  .dropdown-item {
+    padding: 12px 16px;
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+  }
+
+  .dropdown-item:hover {
+    background: var(--border);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .dropdown-item.selected {
+    background: rgba(192,57,43,0.1);
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .period-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .period-btn:hover {
+    background: var(--border);
+  }
+
+  .period-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .dropdown-icon {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+  }
+
+  .period-btn.active .dropdown-icon {
+    transform: rotate(180deg);
+  }
+
   @media (max-width: 1024px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .filters { grid-template-columns: 1fr; }
@@ -250,15 +358,78 @@
   <a href="{% url 'admin_dashboard' %}">Analytics</a>
 </div>
 
-<!-- PERIOD FILTER TABS -->
+<!-- PERIOD FILTER TABS WITH DROPDOWNS -->
 <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;">
   <div class="period-tabs" style="flex: 1; display: flex; gap: 8px; margin-bottom: 0;">
-    {% for period in periods %}
-    <a href="?period={{ period }}" 
-       class="btn {% if current_period == period %}active{% endif %}">
-      {{ period|upper }}
-    </a>
-    {% endfor %}
+    
+    <!-- WEEK DROPDOWN -->
+    <div class="dropdown-wrapper" id="weekWrapper">
+      <button class="period-btn" id="weekBtn">
+        <span>WEEK</span>
+        <span class="dropdown-icon">▼</span>
+      </button>
+      <div class="dropdown-menu" id="weekDropdown">
+        <div class="dropdown-search">
+          <input type="text" placeholder="Search day..." class="dropdown-search-input">
+        </div>
+        <div class="dropdown-items">
+          <div class="dropdown-item" data-value="sunday">Sunday</div>
+          <div class="dropdown-item" data-value="monday">Monday</div>
+          <div class="dropdown-item" data-value="tuesday">Tuesday</div>
+          <div class="dropdown-item" data-value="wednesday">Wednesday</div>
+          <div class="dropdown-item" data-value="thursday">Thursday</div>
+          <div class="dropdown-item" data-value="friday">Friday</div>
+          <div class="dropdown-item" data-value="saturday">Saturday</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONTH DROPDOWN -->
+    <div class="dropdown-wrapper" id="monthWrapper">
+      <button class="period-btn" id="monthBtn">
+        <span>MONTH</span>
+        <span class="dropdown-icon">▼</span>
+      </button>
+      <div class="dropdown-menu" id="monthDropdown">
+        <div class="dropdown-search">
+          <input type="text" placeholder="Search month..." class="dropdown-search-input">
+        </div>
+        <div class="dropdown-items">
+          <div class="dropdown-item" data-value="january">January</div>
+          <div class="dropdown-item" data-value="february">February</div>
+          <div class="dropdown-item" data-value="march">March</div>
+          <div class="dropdown-item" data-value="april">April</div>
+          <div class="dropdown-item" data-value="may">May</div>
+          <div class="dropdown-item" data-value="june">June</div>
+          <div class="dropdown-item" data-value="july">July</div>
+          <div class="dropdown-item" data-value="august">August</div>
+          <div class="dropdown-item" data-value="september">September</div>
+          <div class="dropdown-item" data-value="october">October</div>
+          <div class="dropdown-item" data-value="november">November</div>
+          <div class="dropdown-item" data-value="december">December</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YEAR DROPDOWN -->
+    <div class="dropdown-wrapper" id="yearWrapper">
+      <button class="period-btn" id="yearBtn">
+        <span>YEAR</span>
+        <span class="dropdown-icon">▼</span>
+      </button>
+      <div class="dropdown-menu" id="yearDropdown">
+        <div class="dropdown-search">
+          <input type="text" placeholder="Search year..." class="dropdown-search-input">
+        </div>
+        <div class="dropdown-items" id="yearItems">
+          <!-- Years will be generated by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL BUTTON -->
+    <a href="?period=all" class="period-btn" style="text-decoration: none;">ALL</a>
+
   </div>
   <a href="?period={{ current_period }}&download=1" class="download-btn">
     <i class="fas fa-download"></i> Download CSV
@@ -456,4 +627,100 @@
     </div>
   {% endif %}
 </div>
+
+<!-- DROPDOWN JAVASCRIPT -->
+<script>
+  // Initialize Year Dropdown
+  function initializeYearDropdown() {
+    const yearItems = document.getElementById('yearItems');
+    const currentYear = new Date().getFullYear();
+    
+    for (let year = currentYear; year <= currentYear + 50; year++) {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.textContent = year;
+      item.dataset.value = year;
+      yearItems.appendChild(item);
+    }
+  }
+
+  // Setup Dropdown Functionality
+  function setupDropdown(btnId, dropdownId) {
+    const btn = document.getElementById(btnId);
+    const dropdown = document.getElementById(dropdownId);
+    const items = dropdown.querySelectorAll('.dropdown-item');
+    const searchInput = dropdown.querySelector('.dropdown-search-input');
+
+    // Toggle dropdown
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      // Close other dropdowns
+      document.querySelectorAll('.dropdown-menu.active').forEach(d => {
+        if (d !== dropdown) d.classList.remove('active');
+      });
+      document.querySelectorAll('.period-btn.active').forEach(b => {
+        if (b !== btn) b.classList.remove('active');
+      });
+      
+      dropdown.classList.toggle('active');
+      btn.classList.toggle('active');
+      
+      if (dropdown.classList.contains('active')) {
+        searchInput?.focus();
+      }
+    });
+
+    // Search functionality
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        items.forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+        });
+      });
+    }
+
+    // Item selection
+    items.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Remove previous selection
+        items.forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        
+        // Update button text
+        const btnSpan = btn.querySelector('span:first-child');
+        btnSpan.textContent = item.textContent.toUpperCase();
+        
+        // Close dropdown
+        dropdown.classList.remove('active');
+        btn.classList.remove('active');
+      });
+    });
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown-wrapper')) {
+      document.querySelectorAll('.dropdown-menu.active').forEach(d => {
+        d.classList.remove('active');
+      });
+      document.querySelectorAll('.period-btn.active').forEach(b => {
+        b.classList.remove('active');
+      });
+    }
+  });
+
+  // Initialize all dropdowns
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeYearDropdown();
+    setupDropdown('weekBtn', 'weekDropdown');
+    setupDropdown('monthBtn', 'monthDropdown');
+    setupDropdown('yearBtn', 'yearDropdown');
+  });
+</script>
+
 {% endblock %}

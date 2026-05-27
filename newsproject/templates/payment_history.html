@@ -81,6 +81,7 @@
                             <th>Final Amount</th>
                             <th>Method</th>
                             <th>Status</th>
+                            <th>Receipt</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,6 +120,9 @@
                                 {% else %}
                                     <span class="badge bg-secondary">{{ p.get_status_display }}</span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'payment_receipt' p.transaction_id %}" class="btn btn-sm btn-outline-primary">Receipt</a>
                             </td>
                         </tr>
                         {% endfor %}

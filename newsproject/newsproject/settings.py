@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     # Social Providers
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.facebook',
-    
+    'rest_framework',  # For API endpoints
     # Your local app
     'news',
 ]
@@ -66,14 +66,14 @@ ROOT_URLCONF = 'newsproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'], 
+        'DIRS': [BASE_DIR / 'templates'],  # ← This line is CRITICAL
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'news.context_processors.common_data',
             ],
         },
     },
@@ -187,6 +187,7 @@ NEWS_API_KEY = '83fad5e997474c6aa8705aad5edb636d'
 NEWSDATA_API_KEY = os.getenv('NEWSDATA_API_KEY', 'pub_53f2f0a4ce5e0b2e5e5f5f5f5f5f5f5f5f5f')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 # Security settings for production
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
@@ -206,3 +207,33 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+
+# ============================================================================
+# 📧 EMAIL CONFIGURATION
+# ============================================================================
+# Configuration for sending emails via Gmail SMTP
+# Used by contact form and other email features
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'newsportal556@gmail.com'
+
+# ⚠️ IMPORTANT: Get your 16-character Gmail App Password
+# Steps:
+# 1. Go to: https://myaccount.google.com/apppasswords
+# 2. Make sure logged in as: newsportal556@gmail.com
+# 3. Select App: Mail, Device: Windows Computer
+# 4. Click Generate to get 16-char password
+# 5. Add to .env file OR environment variables
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'ufqz wzno vzop aszo')
+
+DEFAULT_FROM_EMAIL = 'newsportal556@gmail.com'
+
+# ALTERNATIVE FOR DEVELOPMENT: Use console backend
+# Uncomment below to see emails printed in terminal (no Gmail needed)
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# ============================================================================

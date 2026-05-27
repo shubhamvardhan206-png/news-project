@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us - News Portal{% endblock %}
+
+{% block content %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --ink: #0f0f0f;
+    --paper: #faf8f4;
+    --cream: #f2ede4;
+    --accent: #c0392b;
+    --gold: #b8960c;
+    --muted: #6b6560;
+    --border: #d4cfc6;
+  }
+
+  .about-wrapper {
+    background: var(--paper);
+    font-family: 'Source Serif 4', Georgia, serif;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .about-hero {
+    position: relative;
+    background: var(--ink);
+    padding: 90px 40px 70px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .about-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(255,255,255,0.03) 28px,
+      rgba(255,255,255,0.03) 29px
+    );
+  }
+  .about-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent);
+  }
+  .hero-dateline {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .hero-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 8vw, 88px);
+    font-weight: 900;
+    line-height: 0.95;
+    color: #fff;
+    margin: 0 0 24px;
+    letter-spacing: -2px;
+  }
+  .hero-headline em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-sub {
+    font-family: 'Source Serif 4', serif;
+    font-size: 18px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* ── RULE DIVIDER ── */
+  .rule-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 60px 0;
+  }
+  .rule-divider::before,
+  .rule-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .rule-divider span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── CONTENT SECTIONS ── */
+  .about-content {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  .section-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .intro-block {
+    display: grid;
+    grid-template-columns: 3px 1fr;
+    gap: 28px;
+    margin-bottom: 60px;
+  }
+  .intro-block .bar { background: var(--accent); border-radius: 2px; }
+  .intro-block p {
+    font-size: 22px;
+    line-height: 1.65;
+    font-weight: 300;
+    font-style: italic;
+    color: #2a2a2a;
+    margin: 0;
+  }
+
+  .mission-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin: 48px 0;
+    background: var(--border);
+  }
+  .mission-card {
+    background: var(--paper);
+    padding: 36px 32px;
+    position: relative;
+  }
+  .mission-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 14px;
+    color: var(--ink);
+  }
+  .mission-card p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--muted);
+    margin: 0;
+    font-weight: 300;
+  }
+  .mission-card .card-num {
+    position: absolute;
+    top: 20px; right: 24px;
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--cream);
+    line-height: 1;
+  }
+  @media (max-width: 600px) {
+    .mission-grid { grid-template-columns: 1fr; }
+  }
+
+  .body-copy {
+    font-size: 17px;
+    line-height: 1.85;
+    color: #2e2e2e;
+    margin-bottom: 32px;
+    font-weight: 300;
+  }
+  .body-copy strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ── STAT ROW ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border);
+    margin: 56px 0;
+  }
+  .stat-item {
+    padding: 32px 24px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    display: block;
+  }
+  .stat-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 8px;
+    display: block;
+  }
+  @media (max-width: 600px) {
+    .stat-row { grid-template-columns: 1fr; }
+    .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat-item:last-child { border-bottom: none; }
+  }
+
+  /* ── VALUES ── */
+  .values-list {
+    list-style: none;
+    padding: 0; margin: 0 0 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .values-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px 28px;
+    background: var(--cream);
+    border-left: 3px solid var(--accent);
+  }
+  .values-list li .icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .values-list li strong {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .values-list li span {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── CTA BANNER ── */
+  .cta-banner {
+    background: var(--ink);
+    padding: 56px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+  .cta-banner h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 16px;
+  }
+  .cta-banner p {
+    color: rgba(255,255,255,0.6);
+    font-size: 16px;
+    font-style: italic;
+    margin: 0 0 32px;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 14px 36px;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .cta-btn:hover { background: #a93226; color: #fff; text-decoration: none; }
+</style>
+
+<div class="about-wrapper">
+
+  <!-- HERO -->
+  <section class="about-hero">
+    <p class="hero-dateline">Est. Muzaffarpur · Bihar · India</p>
+    <h1 class="hero-headline">About<br><em>Our Story</em></h1>
+    <p class="hero-sub">Committed to truth, clarity, and the voices that matter most.</p>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <div class="about-content">
+
+    <span class="section-label">Who We Are</span>
+    <div class="intro-block">
+      <div class="bar"></div>
+      <p>We are a dedicated news portal bringing accurate, timely, and unbiased reporting to readers across Bihar and beyond. Our mission is simple — to keep you informed, always.</p>
+    </div>
+
+    <p class="body-copy">
+      Founded with a commitment to <strong>honest journalism</strong>, our portal serves as a trusted source for local, regional, and national news. From grassroots stories in Muzaffarpur's neighbourhoods to developments shaping the state of Bihar — we cover it all with integrity and depth.
+    </p>
+
+    <p class="body-copy">
+      We believe every reader deserves access to <strong>well-researched, factual reporting</strong> that helps them understand the world around them. Our editorial team works tirelessly to verify sources, present multiple perspectives, and deliver stories that matter.
+    </p>
+
+    <div class="rule-divider"><span>Our Numbers</span></div>
+
+    <!-- STATS -->
+    <div class="stat-row">
+      <div class="stat-item">
+        <span class="stat-num">5K+</span>
+        <span class="stat-label">Daily Readers</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">100+</span>
+        <span class="stat-label">Stories Published</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">24/7</span>
+        <span class="stat-label">Live Coverage</span>
+      </div>
+    </div>
+
+    <div class="rule-divider"><span>What We Stand For</span></div>
+
+    <!-- MISSION CARDS -->
+    <div class="mission-grid">
+      <div class="mission-card">
+        <span class="card-num">01</span>
+        <h3>Our Mission</h3>
+        <p>To deliver accurate, timely, and impartial news that empowers citizens to make informed decisions about their communities and country.</p>
+      </div>
+      <div class="mission-card">
+        <span class="card-num">02</span>
+        <h3>Our Vision</h3>
+        <p>To become Bihar's most trusted digital news destination — a platform where journalism serves the public interest, not power.</p>
+      </div>
+    </div>
+
+    <div class="rule-divider"><span>Our Values</span></div>
+
+    <!-- VALUES -->
+    <ul class="values-list">
+      <li>
+        <span class="icon">🖊️</span>
+        <div>
+          <strong>Editorial Independence</strong>
+          <span>Our reporting is guided solely by facts and public interest. We are independent of political and commercial pressures.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🔍</span>
+        <div>
+          <strong>Accuracy First</strong>
+          <span>Every story is verified before publication. We correct mistakes promptly and transparently.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🤝</span>
+        <div>
+          <strong>Community Voice</strong>
+          <span>We amplify stories from Muzaffarpur and across Mithilanchal that mainstream media often overlooks.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">⚖️</span>
+        <div>
+          <strong>Fairness &amp; Balance</strong>
+          <span>We present multiple perspectives on complex issues and give all parties a fair opportunity to respond.</span>
+        </div>
+      </li>
+    </ul>
+
+    <p class="body-copy">
+      We are proud to be a <strong>homegrown news portal</strong> rooted in Muzaffarpur. As we grow, our commitment to our readers remains unchanged — to be the first source you trust when news breaks and the voice you rely on when it matters most.
+    </p>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-banner">
+    <h2>Have a Story to Share?</h2>
+    <p>Get in touch with our editorial team. We'd love to hear from you.</p>
+    <a href="{% url 'contact_us' %}" class="cta-btn">Contact Us</a>
+  </div>
+
+</div>
+
+{% endblock %}

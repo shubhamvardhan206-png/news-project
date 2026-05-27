@@ -1,0 +1,621 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  .location-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    padding: 40px 20px;
+    margin-bottom: 40px;
+    border-bottom: 3px solid #e63946;
+  }
+
+  .location-header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  .location-breadcrumb {
+    font-size: 0.95rem;
+    opacity: 0.9;
+  }
+
+  .location-breadcrumb span {
+    color: #e63946;
+    font-weight: 600;
+  }
+
+  .filter-section {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 40px;
+  }
+
+  .filter-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: #0d0d0d;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .filter-title i {
+    color: #e63946;
+  }
+
+  .filter-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .filter-input-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .filter-input-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 0.95rem;
+  }
+
+  .filter-input-group select,
+  .filter-input-group input {
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+  }
+
+  .filter-input-group select:focus,
+  .filter-input-group input:focus {
+    outline: none;
+    border-color: #e63946;
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+  }
+
+  .filter-input-group select:disabled {
+    background: #f0f0f0;
+    color: #999;
+    cursor: not-allowed;
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+  }
+
+  .btn-filter {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+  }
+
+  .btn-search {
+    background: linear-gradient(135deg, #e63946 0%, #c2185b 100%);
+    color: white;
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(230, 57, 70, 0.3);
+  }
+
+  .btn-reset {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+  }
+
+  .btn-reset:hover {
+    background: #e9ecef;
+  }
+
+  .active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .filter-tag {
+    background: #e63946;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-tag a {
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+
+  .filter-tag a:hover {
+    opacity: 1;
+  }
+
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+  }
+
+  .results-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0d0d0d;
+  }
+
+  .results-count {
+    background: #e63946;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+  }
+
+  .news-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .news-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  }
+
+  .news-card-image {
+    width: 100%;
+    height: 180px;
+    background: #f0f0f0;
+    overflow: hidden;
+  }
+
+  .news-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .news-card-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .news-card-meta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .news-source {
+    background: #e63946;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .news-location {
+    background: #2980b9;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .news-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #0d0d0d;
+    line-height: 1.4;
+    flex: 1;
+  }
+
+  .news-card-description {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .news-card-date {
+    font-size: 0.85rem;
+    color: #999;
+    margin-bottom: 15px;
+  }
+
+  .news-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .news-views {
+    font-size: 0.85rem;
+    color: #999;
+  }
+
+  .btn-read {
+    background: #e63946;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-read:hover {
+    background: #c2185b;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+  }
+
+  .no-results i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+  }
+
+  .no-results h3 {
+    font-size: 1.5rem;
+    color: #666;
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 768px) {
+    .location-header h1 {
+      font-size: 1.8rem;
+    }
+
+    .filter-group {
+      grid-template-columns: 1fr;
+    }
+
+    .filter-actions {
+      flex-direction: column;
+    }
+
+    .btn-filter {
+      width: 100%;
+    }
+
+    .news-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .results-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 15px;
+    }
+  }
+</style>
+
+<!-- Location Header -->
+<div class="location-header">
+  <div class="container">
+    <h1>📍 Browse News by Location</h1>
+    <div class="location-breadcrumb">
+      <i class="fas fa-map-marker-alt"></i>
+      {% if selected_state_obj %}
+        <span>{{ selected_state_obj.name }}</span>
+        {% if selected_district_obj %} > <span>{{ selected_district_obj.name }}</span>{% endif %}
+        {% if selected_block_obj %} > <span>{{ selected_block_obj.name }}</span>{% endif %}
+      {% else %}
+        <span>All Locations</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Filter Section -->
+<div class="container">
+  <form method="GET" class="filter-section">
+    <div class="filter-title">
+      <i class="fas fa-filter"></i>
+      Filter News
+    </div>
+
+    <div class="filter-group">
+      <!-- State Filter -->
+      <div class="filter-input-group">
+        <label for="state"><i class="fas fa-globe"></i> Select State</label>
+        <select id="state" name="state" onchange="loadDistricts(this.value)">
+          <option value="">-- All States --</option>
+          {% for state in states %}
+            <option value="{{ state.id }}" {% if state.id|stringformat:"s" == selected_state %}selected{% endif %}>
+              {{ state.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- District Filter -->
+      <div class="filter-input-group">
+        <label for="district"><i class="fas fa-city"></i> Select District</label>
+        <select id="district" name="district" onchange="loadBlocks(this.value)" {% if not selected_state %}disabled{% endif %}>
+          <option value="">-- All Districts --</option>
+          {% for district in districts %}
+            <option value="{{ district.id }}" {% if district.id|stringformat:"s" == selected_district %}selected{% endif %}>
+              {{ district.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Block Filter -->
+      <div class="filter-input-group">
+        <label for="block"><i class="fas fa-map"></i> Select Block</label>
+        <select id="block" name="block" {% if not selected_district %}disabled{% endif %}>
+          <option value="">-- All Blocks --</option>
+          {% for block in blocks %}
+            <option value="{{ block.id }}" {% if block.id|stringformat:"s" == selected_block %}selected{% endif %}>
+              {{ block.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Search -->
+      <div class="filter-input-group">
+        <label for="search"><i class="fas fa-search"></i> Search News</label>
+        <input type="text" id="search" name="search" placeholder="Enter keywords..." value="{{ search_query }}">
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter btn-search">
+        <i class="fas fa-search"></i> Search News
+      </button>
+      <a href="{% url 'location_news' %}" class="btn-filter btn-reset">
+        <i class="fas fa-redo"></i> Reset Filters
+      </a>
+    </div>
+
+    <!-- Active Filters Display -->
+    {% if selected_state_obj or selected_district_obj or selected_block_obj or search_query %}
+    <div class="active-filters">
+      {% if selected_state_obj %}
+        <div class="filter-tag">
+          <i class="fas fa-map-pin"></i> {{ selected_state_obj.name }}
+        </div>
+      {% endif %}
+      {% if selected_district_obj %}
+        <div class="filter-tag">
+          <i class="fas fa-location-dot"></i> {{ selected_district_obj.name }}
+        </div>
+      {% endif %}
+      {% if selected_block_obj %}
+        <div class="filter-tag">
+          <i class="fas fa-map"></i> {{ selected_block_obj.name }}
+        </div>
+      {% endif %}
+      {% if search_query %}
+        <div class="filter-tag">
+          <i class="fas fa-quote-left"></i> "{{ search_query }}"
+        </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </form>
+
+  <!-- Results -->
+  {% if news %}
+    <div class="results-header">
+      <div class="results-title">
+        <i class="fas fa-newspaper"></i> Latest News
+      </div>
+      <div class="results-count">{{ total_news }} Results</div>
+    </div>
+
+    <div class="news-grid">
+      {% for item in news %}
+        <div class="news-card">
+          {% if item.image_url %}
+            <div class="news-card-image">
+              <img src="{{ item.image_url }}" alt="{{ item.title }}" onerror="this.style.display='none'">
+            </div>
+          {% else %}
+            <div class="news-card-image" style="background: linear-gradient(135deg, #e63946 0%, #c2185b 100%); display: flex; align-items: center; justify-content: center; color: white;">
+              <i class="fas fa-newspaper fa-3x" style="opacity: 0.3;"></i>
+            </div>
+          {% endif %}
+
+          <div class="news-card-body">
+            <div class="news-card-meta">
+              <span class="news-source">{{ item.source_name|truncatechars:20 }}</span>
+              {% if item.state %}
+                <span class="news-location">📍 {{ item.state.name }}</span>
+              {% endif %}
+            </div>
+
+            <h3 class="news-card-title">{{ item.title }}</h3>
+
+            {% if item.description %}
+              <p class="news-card-description">{{ item.description }}</p>
+            {% endif %}
+
+            <div class="news-card-date">
+              <i class="fas fa-calendar"></i>
+              {% if item.published_at %}
+                {{ item.published_at|date:"M d, Y" }}
+              {% else %}
+                {{ item.fetched_at|date:"M d, Y" }}
+              {% endif %}
+            </div>
+
+            <div class="news-card-footer">
+              <div class="news-views">
+                <i class="fas fa-eye"></i> {{ item.views }} views
+              </div>
+              <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer" class="btn-read">
+                Read More →
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="no-results">
+      <i class="fas fa-inbox"></i>
+      <h3>No News Found</h3>
+      <p>Try adjusting your filters or search terms to find news from your location.</p>
+      <a href="{% url 'location_news' %}" class="btn-filter btn-search" style="display: inline-block; margin-top: 20px;">
+        Clear Filters & Try Again
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  // Load states on page load (for dynamic state loading if needed)
+  function loadStatesFromAPI() {
+    fetch('/api/states/')
+      .then(r => r.json())
+      .then(data => {
+        // ✅ Fixed: Handle both array and object responses
+        const states = Array.isArray(data) ? data : (data.states || data.results || []);
+        const sel = document.getElementById('state');
+        
+        // Keep the first option
+        sel.innerHTML = '<option value="">-- All States --</option>';
+        
+        states.forEach(s => {
+          const option = document.createElement('option');
+          option.value = s.id;
+          option.textContent = s.name;
+          sel.appendChild(option);
+        });
+      })
+      .catch(error => {
+        console.error('Error loading states:', error);
+      });
+  }
+
+  // Load districts when state changes
+  function loadDistricts(stateId) {
+    const districtSelect = document.getElementById('district');
+    const blockSelect = document.getElementById('block');
+
+    if (!stateId) {
+      districtSelect.disabled = true;
+      blockSelect.disabled = true;
+      districtSelect.innerHTML = '<option value="">-- All Districts --</option>';
+      blockSelect.innerHTML = '<option value="">-- All Blocks --</option>';
+      return;
+    }
+
+    fetch(`/api/state-districts/${stateId}/`)
+      .then(response => response.json())
+      .then(data => {
+        districtSelect.disabled = false;
+        districtSelect.innerHTML = '<option value="">-- All Districts --</option>';
+        
+        // ✅ Fixed: Handle both array and object responses
+        const districts = Array.isArray(data) ? data : (data.districts || data.results || []);
+        districts.forEach(district => {
+          const option = document.createElement('option');
+          option.value = district.id;
+          option.textContent = district.name;
+          districtSelect.appendChild(option);
+        });
+        blockSelect.disabled = true;
+        blockSelect.innerHTML = '<option value="">-- All Blocks --</option>';
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  // Load blocks when district changes
+  function loadBlocks(districtId) {
+    const blockSelect = document.getElementById('block');
+
+    if (!districtId) {
+      blockSelect.disabled = true;
+      blockSelect.innerHTML = '<option value="">-- All Blocks --</option>';
+      return;
+    }
+
+    fetch(`/api/district-blocks/${districtId}/`)
+      .then(response => response.json())
+      .then(data => {
+        blockSelect.disabled = false;
+        blockSelect.innerHTML = '<option value="">-- All Blocks --</option>';
+        
+        // ✅ Fixed: Handle both array and object responses
+        const blocks = Array.isArray(data) ? data : (data.blocks || data.results || []);
+        blocks.forEach(block => {
+          const option = document.createElement('option');
+          option.value = block.id;
+          option.textContent = block.name;
+          blockSelect.appendChild(option);
+        });
+      })
+      .catch(error => console.error('Error:', error));
+  }
+</script>

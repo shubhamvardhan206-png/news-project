@@ -1,0 +1,409 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - News Portal{% endblock %}
+
+{% block content %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --ink: #0f0f0f;
+    --paper: #faf8f4;
+    --cream: #f2ede4;
+    --accent: #c0392b;
+    --gold: #b8960c;
+    --muted: #6b6560;
+    --border: #d4cfc6;
+    --success: #27ae60;
+  }
+
+  .contact-wrapper {
+    background: var(--paper);
+    font-family: 'Source Serif 4', Georgia, serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── HERO ── */
+  .contact-hero {
+    position: relative;
+    background: var(--ink);
+    padding: 80px 40px 64px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .contact-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 60px,
+      rgba(255,255,255,0.02) 60px,
+      rgba(255,255,255,0.02) 61px
+    );
+  }
+  .contact-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent);
+  }
+  .hero-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 8vw, 80px);
+    font-weight: 900;
+    line-height: 0.95;
+    color: #fff;
+    margin: 0 0 20px;
+    letter-spacing: -2px;
+  }
+  .hero-title em { font-style: italic; color: var(--accent); }
+  .hero-desc {
+    font-size: 17px;
+    color: rgba(255,255,255,0.6);
+    font-style: italic;
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ── LAYOUT ── */
+  .contact-body {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 70px 24px 90px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 64px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .contact-body {
+      grid-template-columns: 1fr;
+      gap: 48px;
+      padding: 48px 20px 64px;
+    }
+  }
+
+  /* ── FORM SIDE ── */
+  .section-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .form-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .form-sub {
+    font-size: 15px;
+    color: var(--muted);
+    font-style: italic;
+    margin: 0 0 36px;
+    line-height: 1.6;
+  }
+
+  .contact-form { display: flex; flex-direction: column; gap: 22px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+
+  .field-group { display: flex; flex-direction: column; gap: 7px; }
+  .field-group label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .field-group input,
+  .field-group select,
+  .field-group textarea {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 13px 16px;
+    font-family: 'Source Serif 4', serif;
+    font-size: 15px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+  }
+  .field-group input:focus,
+  .field-group select:focus,
+  .field-group textarea:focus {
+    border-color: var(--accent);
+  }
+  .field-group textarea { resize: vertical; min-height: 130px; }
+
+  .submit-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 15px 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .submit-btn:hover {
+    background: #a93226;
+    transform: translateY(-1px);
+  }
+  .submit-btn:active { transform: translateY(0); }
+
+  /* success / error messages */
+  .form-success {
+    background: #eaf7ef;
+    border-left: 4px solid var(--success);
+    padding: 16px 20px;
+    font-size: 15px;
+    color: #1e6b40;
+    margin-bottom: 24px;
+  }
+  .form-error {
+    background: #fdecea;
+    border-left: 4px solid var(--accent);
+    padding: 16px 20px;
+    font-size: 15px;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+
+  /* ── INFO SIDE ── */
+  .info-side { position: sticky; top: 24px; }
+
+  .info-card {
+    background: var(--ink);
+    color: #fff;
+    padding: 40px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .info-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+  .info-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 28px;
+    color: #fff;
+  }
+  .info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .info-item:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .info-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .info-text strong {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 6px;
+  }
+  .info-text p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.88);
+    font-style: italic;
+  }
+  .info-text a {
+    color: rgba(255,255,255,0.88);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .info-text a:hover { color: var(--accent); }
+
+  /* response time badge */
+  .response-badge {
+    margin-top: 28px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .response-badge p {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.5);
+    margin: 0 0 4px;
+    text-transform: uppercase;
+  }
+  .response-badge strong {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: #fff;
+    display: block;
+  }
+
+  /* Django messages framework styling */
+  .django-messages { list-style: none; padding: 0; margin: 0 0 24px; }
+  .django-messages li {
+    padding: 14px 18px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    border-left: 4px solid;
+  }
+  .django-messages li.success { background: #eaf7ef; border-color: var(--success); color: #1e6b40; }
+  .django-messages li.error   { background: #fdecea; border-color: var(--accent);  color: var(--accent); }
+  .django-messages li.info    { background: #e8f4fd; border-color: #2980b9; color: #1a5276; }
+</style>
+
+<div class="contact-wrapper">
+
+  <!-- HERO -->
+  <section class="contact-hero">
+    <p class="hero-tag">We're Listening</p>
+    <h1 class="hero-title">Get In<br><em>Touch</em></h1>
+    <p class="hero-desc">Questions, tips, feedback — our team is ready to hear from you.</p>
+  </section>
+
+  <!-- BODY -->
+  <div class="contact-body">
+
+    <!-- FORM -->
+    <div class="form-side">
+      <span class="section-label">Send a Message</span>
+      <h2 class="form-heading">Write to Us</h2>
+      <p class="form-sub">Fill in the form below and we'll get back to you within 24 hours.</p>
+
+      <!-- Django messages -->
+      {% if messages %}
+        <ul class="django-messages">
+          {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <form method="POST" action="{% url 'contact_us' %}" class="contact-form">
+        {% csrf_token %}
+
+        <div class="form-row">
+          <div class="field-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required>
+          </div>
+          <div class="field-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" name="subject" placeholder="What is this about?" required>
+        </div>
+
+        <div class="field-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" placeholder="Tell us your thoughts, questions, or feedback..." required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Send Message</button>
+      </form>
+
+    </div>
+
+    <!-- INFO SIDEBAR -->
+    <aside class="info-side">
+      <div class="info-card">
+        <h3 class="info-card-title">Get In Touch</h3>
+
+        <div class="info-item">
+          <div class="info-icon">✉️</div>
+          <div class="info-text">
+            <strong>Email</strong>
+            <p><a href="mailto:info@newsportal.com">info@newsportal.com</a></p>
+            <p style="margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.6);">For general inquiries</p>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-icon">📞</div>
+          <div class="info-text">
+            <strong>Phone</strong>
+            <p><a href="tel:+911234567890">+91 (123) 456-7890</a></p>
+            <p style="margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.6);">Monday - Friday, 9 AM - 6 PM IST</p>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-icon">📍</div>
+          <div class="info-text">
+            <strong>Address</strong>
+            <p>Muzaffarpur, Bihar<br>India</p>
+          </div>
+        </div>
+
+        <div class="response-badge">
+          <p>Response Time</p>
+          <strong>24 Hours</strong>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+</div>
+
+{% endblock %}

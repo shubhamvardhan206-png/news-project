@@ -4,238 +4,137 @@
 {% block title %}Secure Payment Checkout - NewsPortal{% endblock %}
 
 {% block content %}
-<div class="payment-container">
-  <!-- Progress Indicator -->
-  <div class="payment-progress">
-    <div class="progress-step completed">
-      <div class="step-number">1</div>
-      <div class="step-label">Plan Selected</div>
-    </div>
-    <div class="progress-line completed"></div>
-    <div class="progress-step completed">
-      <div class="step-number">2</div>
-      <div class="step-label">Review</div>
-    </div>
-    <div class="progress-line active"></div>
-    <div class="progress-step active">
-      <div class="step-number">3</div>
-      <div class="step-label">Payment</div>
-    </div>
-    <div class="progress-line"></div>
-    <div class="progress-step">
-      <div class="step-number">4</div>
-      <div class="step-label">Confirmation</div>
-    </div>
+<div class="checkout-container">
+  <div class="checkout-header">
+    <h1>Complete Your Payment</h1>
+    <p>Secure UPI Transaction - NewsPortal Premium</p>
   </div>
 
-  <div class="payment-content">
-    <!-- Left Column: Payment Summary & QR Code -->
-    <div class="payment-left">
-      <!-- Secure Header -->
-      <div class="secure-header">
-        <div class="secure-icon">
-          <i class="fas fa-shield-alt"></i>
+  <div class="checkout-content">
+    <!-- Left Column -->
+    <div class="checkout-left">
+      <div class="card summary-card">
+        <h3>Order Summary</h3>
+        <div class="summary-row">
+          <span>Plan Name</span>
+          <span>{{ plan.name }}</span>
         </div>
-        <div>
-          <h2>Secure Payment</h2>
-          <p>Your transaction is 256-bit SSL encrypted</p>
+        <div class="summary-row">
+          <span>Duration</span>
+          <span>{{ plan.duration_days }} days</span>
         </div>
-      </div>
-
-      <!-- Order Summary Card -->
-      <div class="summary-card">
-        <h3 class="card-title">Order Summary</h3>
-        
-        <div class="summary-item">
-          <span class="item-label">Plan Name</span>
-          <span class="item-value">{{ plan.name }}</span>
+        <div class="summary-row">
+          <span>Plan Type</span>
+          <span class="badge">{{ plan.get_plan_type_display }}</span>
         </div>
-
-        <div class="summary-item">
-          <span class="item-label">Plan Duration</span>
-          <span class="item-value">{{ plan.duration_days }} days</span>
+        <div class="divider"></div>
+        <div class="summary-row">
+          <span>Base Price</span>
+          <span>₹{{ original_amount }}</span>
         </div>
-
-        <div class="summary-item">
-          <span class="item-label">Plan Type</span>
-          <span class="item-badge">{{ plan.get_plan_type_display }}</span>
-        </div>
-
-        <div class="summary-divider"></div>
-
-        <div class="summary-item">
-          <span class="item-label">Base Price</span>
-          <span class="item-value">₹{{ original_amount }}</span>
-        </div>
-
         {% if coupon %}
-        <div class="summary-item discount">
-          <span class="item-label">Coupon Discount ({{ coupon.discount_percent }}%)</span>
-          <span class="item-value text-success">-₹{{ discount }}</span>
-        </div>
-        <div class="coupon-tag">
-          <i class="fas fa-check-circle"></i> {{ coupon.code }} Applied
+        <div class="summary-row discount">
+          <span>Discount ({{ coupon.discount_percent }}%)</span>
+          <span>-₹{{ discount }}</span>
         </div>
         {% endif %}
-
-        <div class="summary-divider"></div>
-
+        <div class="divider"></div>
         <div class="summary-total">
-          <span class="total-label">Total Amount</span>
-          <span class="total-value">₹{{ final_amount }}</span>
+          <span>Total Amount</span>
+          <span class="total">₹{{ final_amount }}</span>
         </div>
       </div>
 
-      <!-- Coupon Section -->
-      <div class="coupon-section" id="couponSection">
-        <form method="POST" id="couponForm" class="coupon-form">
+      <div class="card coupon-card">
+        <h3>Have a Coupon Code?</h3>
+        <form method="POST" class="coupon-form">
           {% csrf_token %}
           <div class="coupon-input-group">
             <input type="text" name="coupon_code" class="coupon-input" 
-              placeholder="Have a coupon code? Enter here..." 
-              value="{{ coupon.code|default:'' }}">
+              placeholder="Enter coupon code..." value="{{ coupon.code|default:'' }}">
             <button type="submit" class="coupon-btn">Apply</button>
           </div>
+          {% if coupon %}
+          <div class="coupon-applied">
+            ✓ {{ coupon.code }} Applied ({{ coupon.discount_percent }}% off)
+          </div>
+          {% endif %}
         </form>
       </div>
 
-      <!-- QR Code Section -->
-      <div class="qr-section">
-        <h3 class="qr-title">Scan to Pay</h3>
+      <div class="card qr-card">
+        <h3>Quick Payment</h3>
+        <p class="qr-subtitle">Scan to pay instantly</p>
         {% if qr_code %}
-        <div class="qr-code-container">
-          <img src="{{ qr_code }}" alt="UPI QR Code" class="qr-code-image">
+        <div class="qr-box">
+          <img src="{{ qr_code }}" alt="UPI QR Code" class="qr-image">
         </div>
-        <p class="qr-hint">Use any UPI app to scan and pay</p>
+        <p class="qr-hint">Use any UPI app to scan this QR code</p>
         {% else %}
-        <div class="alert alert-danger">
-          <i class="fas fa-exclamation-circle"></i> QR Code generation failed. Please try again.
-        </div>
+        <p class="error">QR Code generation failed</p>
         {% endif %}
       </div>
     </div>
 
-    <!-- Right Column: Payment Details & Form -->
-    <div class="payment-right">
-      <!-- Payment Details -->
-      <div class="details-card">
-        <h3 class="card-title">Payment Details</h3>
-
-        <div class="detail-group">
-          <label class="detail-label">Your UPI ID</label>
-          <div class="detail-value">
-            <i class="fas fa-wallet"></i>
-            <span>{{ user_upi_id }}</span>
-            <a href="{% url 'save_upi' %}?next_plan={{ plan.id }}" class="edit-link">
-              <i class="fas fa-edit"></i> Change
-            </a>
-          </div>
+    <!-- Right Column -->
+    <div class="checkout-right">
+      <div class="card payment-card">
+        <h3>Payment Details</h3>
+        <div class="detail">
+          <label>From UPI ID</label>
+          <div class="detail-value">{{ user_upi_id }}</div>
         </div>
-
-        <div class="detail-divider"></div>
-
-        <div class="detail-group">
-          <label class="detail-label">Recipient UPI ID</label>
-          <div class="detail-value">
-            <i class="fas fa-store"></i>
-            <span>{{ owner_upi }}</span>
-          </div>
+        <div class="detail">
+          <label>To UPI ID</label>
+          <div class="detail-value">{{ owner_upi }}</div>
         </div>
-
-        <div class="detail-divider"></div>
-
-        <div class="detail-group">
-          <label class="detail-label">Payment Method</label>
-          <div class="payment-method">
-            <div class="method-selected">
-              <i class="fas fa-mobile-alt"></i>
-              <span>UPI (Unified Payments Interface)</span>
-              <i class="fas fa-check-circle"></i>
-            </div>
-          </div>
+        <div class="detail">
+          <label>Payment Method</label>
+          <div class="detail-value">UPI (Unified Payments Interface)</div>
         </div>
       </div>
 
-      <!-- Transaction Verification Form -->
-      <div class="verification-card">
-        <h3 class="card-title">Verify Transaction</h3>
-        <p class="verification-hint">After payment, enter your transaction ID below</p>
-
+      <div class="card verification-card">
+        <h3>Verify Transaction</h3>
+        <p class="hint">Enter the 12-digit UTR from your bank</p>
+        
         <form method="POST" class="verification-form">
           {% csrf_token %}
-
           <div class="form-group">
-            <label for="transactionId" class="form-label">Transaction ID</label>
-            <div class="input-wrapper">
-              <input type="text" name="transaction_id" id="transactionId" 
-                class="form-input" placeholder="Enter 12-digit UTR/Ref No."
-                required>
-              <small class="form-hint">e.g., 123456789ABC</small>
-            </div>
+            <label for="transactionId">Transaction ID (UTR)</label>
+            <input type="text" name="transaction_id" id="transactionId" 
+              class="form-input" placeholder="e.g., 123456789ABC" maxlength="12" required>
+            <small>12-digit reference number from your payment confirmation</small>
           </div>
 
           <input type="hidden" name="final_amount" value="{{ final_amount }}">
 
           <button type="submit" class="verify-btn">
-            <i class="fas fa-check-circle"></i> Verify & Activate Subscription
+            Verify & Activate Subscription
           </button>
 
           <div class="security-badge">
-            <i class="fas fa-lock"></i>
-            <span>Your payment is 256-bit SSL encrypted</span>
+            🔒 Your data is encrypted and secure
           </div>
         </form>
       </div>
 
-      <!-- Payment Support -->
-      <div class="support-section">
-        <h4 class="support-title">Need Help?</h4>
-        <div class="support-items">
-          <a href="#" class="support-item">
-            <i class="fas fa-question-circle"></i>
-            <span>Payment FAQ</span>
-          </a>
-          <a href="mailto:support@newsportal.com" class="support-item">
-            <i class="fas fa-envelope"></i>
-            <span>Contact Support</span>
-          </a>
-          <a href="#" class="support-item">
-            <i class="fas fa-phone"></i>
-            <span>Call Us</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Security & Info -->
-      <div class="info-section">
-        <div class="info-item">
-          <i class="fas fa-info-circle"></i>
-          <div>
-            <strong>Activation:</strong>
-            <p>Your subscription activates within 1-2 minutes after verification.</p>
-          </div>
-        </div>
-        <div class="info-item">
-          <i class="fas fa-lock"></i>
-          <div>
-            <strong>Secure:</strong>
-            <p>We verify every transaction with your bank. Your data is encrypted.</p>
-          </div>
-        </div>
+      <div class="card support-card">
+        <h4>Need Help?</h4>
+        <a href="#">Payment FAQ</a>
+        <a href="mailto:support@newsportal.com">Contact Support</a>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Messages Display -->
 {% if messages %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     {% for message in messages %}
     var alertType = '{{ message.tags }}' || 'info';
     var alertHtml = `
-      <div class="toast-notification toast-{{ alertType }}">
-        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+      <div class="toast toast-{{ alertType }}">
         <span>{{ message }}</span>
         <button class="toast-close" onclick="this.parentElement.remove()">×</button>
       </div>
@@ -248,211 +147,90 @@
 
 <style>
   :root {
-    --primary: #667eea;
-    --primary-dark: #764ba2;
-    --success: #27ae60;
-    --danger: #e74c3c;
-    --warning: #f39c12;
-    --info: #3498db;
-    --light: #f8f9fa;
-    --muted: #7f8c8d;
+    --primary: #e63946;
+    --primary-dark: #d31d2d;
+    --secondary: #1a1a2e;
+    --success: #06a77d;
     --border: #e0e0e0;
-    --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+    --text-light: #999;
+    --bg-light: #f8f9fa;
   }
 
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  }
-
-  .payment-container {
+  .checkout-container {
     max-width: 1200px;
     margin: 40px auto;
-    padding: 20px;
+    padding: 0 20px;
   }
 
-  /* Progress Indicator */
-  .payment-progress {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .checkout-header {
+    text-align: center;
     margin-bottom: 50px;
-    gap: 0;
   }
 
-  .progress-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-    z-index: 2;
+  .checkout-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--secondary);
   }
 
-  .step-number {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--light);
-    border: 2px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    color: var(--muted);
-    transition: all 0.3s ease;
+  .checkout-header p {
+    color: var(--text-light);
+    font-size: 16px;
   }
 
-  .progress-step.completed .step-number {
-    background: var(--success);
-    color: white;
-    border-color: var(--success);
-  }
-
-  .progress-step.active .step-number {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.1);
-  }
-
-  .step-label {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .progress-step.completed .step-label {
-    color: var(--success);
-  }
-
-  .progress-step.active .step-label {
-    color: var(--primary);
-  }
-
-  .progress-line {
-    width: 60px;
-    height: 2px;
-    background: var(--border);
-    position: relative;
-    transition: background 0.3s ease;
-  }
-
-  .progress-line.completed {
-    background: var(--success);
-  }
-
-  .progress-line.active {
-    background: var(--primary);
-  }
-
-  /* Main Content */
-  .payment-content {
+  .checkout-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 40px;
-    margin-bottom: 40px;
   }
 
-  @media (max-width: 992px) {
-    .payment-content {
+  @media (max-width: 1024px) {
+    .checkout-content {
       grid-template-columns: 1fr;
       gap: 30px;
     }
   }
 
-  /* Left Column */
-  .payment-left {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-  }
-
-  /* Secure Header */
-  .secure-header {
+  .card {
     background: white;
-    padding: 24px;
     border-radius: 12px;
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    box-shadow: var(--shadow);
-  }
-
-  .secure-icon {
-    font-size: 40px;
-    color: var(--primary);
-    flex-shrink: 0;
-  }
-
-  .secure-header h2 {
-    font-size: 22px;
-    color: #1a1a1a;
-    margin-bottom: 4px;
-  }
-
-  .secure-header p {
-    color: var(--muted);
-    font-size: 14px;
-  }
-
-  /* Summary Card */
-  .summary-card {
-    background: white;
     padding: 28px;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-  }
-
-  .summary-card .card-title {
-    font-size: 18px;
-    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     margin-bottom: 20px;
-    color: #1a1a1a;
   }
 
-  .summary-item {
+  .card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--secondary);
+  }
+
+  .card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--secondary);
+  }
+
+  .summary-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     padding: 12px 0;
+    border-bottom: 1px solid var(--border);
     font-size: 14px;
   }
 
-  .item-label {
-    color: var(--muted);
-    font-weight: 500;
+  .summary-row:last-child {
+    border-bottom: none;
   }
 
-  .item-value {
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-
-  .item-badge {
-    display: inline-block;
-    background: var(--info);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .summary-item.discount .item-value {
+  .summary-row.discount span:last-child {
     color: var(--success);
   }
 
-  .summary-divider {
+  .divider {
     height: 1px;
     background: var(--border);
     margin: 16px 0;
@@ -461,74 +239,86 @@
   .summary-total {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 16px 0;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
     padding: 16px;
+    background: linear-gradient(135deg, rgba(230, 57, 70, 0.05) 0%, rgba(230, 57, 70, 0.02) 100%);
     border-radius: 8px;
     margin-top: 12px;
   }
 
-  .total-label {
-    font-weight: 600;
-    color: #1a1a1a;
-    font-size: 16px;
-  }
-
-  .total-value {
+  .summary-total .total {
     font-size: 28px;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--primary);
   }
 
-  .coupon-tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(39, 174, 96, 0.1);
-    color: var(--success);
-    padding: 8px 12px;
-    border-radius: 6px;
+  .badge {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .qr-card {
+    text-align: center;
+  }
+
+  .qr-subtitle {
+    color: var(--text-light);
     font-size: 13px;
-    font-weight: 600;
-    margin: 12px 0 0 0;
+    margin-bottom: 20px;
   }
 
-  .coupon-tag i {
-    font-size: 14px;
-  }
-
-  /* Coupon Section */
-  .coupon-section {
-    background: var(--light);
+  .qr-box {
+    background: var(--bg-light);
     padding: 20px;
     border-radius: 12px;
-    border: 2px dashed var(--border);
+    display: inline-block;
+    border: 2px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .qr-image {
+    width: 240px;
+    height: 240px;
+    display: block;
+  }
+
+  .qr-hint {
+    color: var(--text-light);
+    font-size: 13px;
+  }
+
+  .coupon-card {
+    order: -1;
   }
 
   .coupon-form {
     display: flex;
-    gap: 0;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .coupon-input-group {
     display: flex;
-    gap: 0;
-    width: 100%;
+    gap: 8px;
   }
 
   .coupon-input {
     flex: 1;
-    padding: 12px 16px;
-    border: none;
-    border-radius: 8px 0 0 8px;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
     font-size: 14px;
-    background: white;
+    outline: none;
+    transition: all 0.3s ease;
   }
 
   .coupon-input:focus {
-    outline: none;
-    background: white;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
   }
 
   .coupon-btn {
@@ -536,182 +326,68 @@
     background: var(--primary);
     color: white;
     border: none;
-    border-radius: 0 8px 8px 0;
-    font-weight: 600;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: all 0.3s ease;
   }
 
   .coupon-btn:hover {
     background: var(--primary-dark);
   }
 
-  /* QR Code Section */
-  .qr-section {
-    background: white;
-    padding: 28px;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
+  .coupon-applied {
+    padding: 12px 14px;
+    background: rgba(6, 168, 125, 0.1);
+    border: 1px solid rgba(6, 168, 125, 0.3);
+    border-radius: 8px;
+    color: var(--success);
+    font-size: 13px;
+    font-weight: 600;
     text-align: center;
   }
 
-  .qr-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #1a1a1a;
-  }
-
-  .qr-code-container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    display: inline-block;
-    border: 2px solid var(--border);
-  }
-
-  .qr-code-image {
-    width: 280px;
-    height: 280px;
-    display: block;
-  }
-
-  .qr-hint {
-    color: var(--muted);
-    font-size: 13px;
-    margin-top: 16px;
-  }
-
-  /* Right Column */
-  .payment-right {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-  }
-
-  /* Details Card */
-  .details-card,
-  .verification-card {
-    background: white;
-    padding: 28px;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-  }
-
-  .details-card .card-title,
-  .verification-card .card-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #1a1a1a;
-  }
-
-  .detail-group {
+  .detail {
     margin-bottom: 16px;
   }
 
-  .detail-label {
+  .detail label {
     display: block;
     font-size: 12px;
     font-weight: 700;
-    color: var(--muted);
     text-transform: uppercase;
+    color: var(--text-light);
     margin-bottom: 8px;
     letter-spacing: 0.5px;
   }
 
   .detail-value {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     padding: 12px 14px;
-    background: var(--light);
+    background: var(--bg-light);
     border-radius: 8px;
     font-weight: 600;
-    color: #1a1a1a;
-  }
-
-  .detail-value i {
-    color: var(--primary);
-    font-size: 16px;
-  }
-
-  .edit-link {
-    margin-left: auto;
-    color: var(--primary);
-    text-decoration: none;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: color 0.3s ease;
-  }
-
-  .edit-link:hover {
-    color: var(--primary-dark);
-  }
-
-  .detail-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 16px 0;
-  }
-
-  .payment-method {
-    padding: 0;
-  }
-
-  .method-selected {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px;
-    background: rgba(102, 126, 234, 0.05);
-    border: 2px solid var(--primary);
-    border-radius: 8px;
-    color: #1a1a1a;
-    font-weight: 600;
-  }
-
-  .method-selected i:first-child {
-    font-size: 20px;
-    color: var(--primary);
-  }
-
-  .method-selected i:last-child {
-    margin-left: auto;
-    color: var(--success);
-  }
-
-  /* Verification Form */
-  .verification-hint {
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 20px;
+    font-family: 'Courier New', monospace;
   }
 
   .verification-form {
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 16px;
   }
 
   .form-group {
-    margin-bottom: 16px;
-  }
-
-  .form-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 8px;
-  }
-
-  .input-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .form-input {
@@ -719,21 +395,18 @@
     border: 2px solid var(--border);
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
+    outline: none;
     transition: all 0.3s ease;
   }
 
   .form-input:focus {
-    outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
   }
 
-  .form-hint {
-    display: block;
-    color: var(--muted);
+  .form-group small {
     font-size: 12px;
-    margin-top: 4px;
+    color: var(--text-light);
   }
 
   .verify-btn {
@@ -745,165 +418,81 @@
     font-weight: 700;
     font-size: 15px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    margin-top: 8px;
-    margin-bottom: 16px;
+    transition: all 0.3s ease;
   }
 
   .verify-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-  }
-
-  .verify-btn:active {
-    transform: translateY(0);
+    box-shadow: 0 8px 20px rgba(230, 57, 70, 0.3);
   }
 
   .security-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 14px;
-    background: var(--light);
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--muted);
     text-align: center;
-    justify-content: center;
-  }
-
-  .security-badge i {
+    padding: 12px 14px;
+    background: var(--bg-light);
+    border-radius: 8px;
+    font-size: 12px;
     color: var(--success);
-    font-size: 14px;
-  }
-
-  /* Support Section */
-  .support-section {
-    background: var(--light);
-    padding: 20px;
-    border-radius: 12px;
-  }
-
-  .support-title {
-    font-size: 14px;
     font-weight: 600;
-    margin-bottom: 12px;
-    color: #1a1a1a;
   }
 
-  .support-items {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .support-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  .support-card a {
+    display: block;
     padding: 10px 12px;
     color: var(--primary);
     text-decoration: none;
     border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
     transition: background 0.3s ease;
+  }
+
+  .support-card a:hover {
+    background: rgba(230, 57, 70, 0.1);
+  }
+
+  .hint {
     font-size: 13px;
-    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 20px;
   }
 
-  .support-item:hover {
-    background: rgba(102, 126, 234, 0.1);
+  .error {
+    color: #d62828;
   }
 
-  /* Info Section */
-  .info-section {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .info-item {
-    display: flex;
-    gap: 12px;
-    padding: 14px;
-    background: var(--light);
-    border-radius: 8px;
-  }
-
-  .info-item i {
-    color: var(--primary);
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .info-item strong {
-    display: block;
-    color: #1a1a1a;
-    font-size: 13px;
-  }
-
-  .info-item p {
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: 4px;
-  }
-
-  /* Toast Notifications */
-  .toast-notification {
+  .toast {
     position: fixed;
     top: 20px;
     right: 20px;
     background: white;
     padding: 16px 20px;
     border-radius: 8px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     z-index: 9999;
     animation: slideIn 0.3s ease;
     max-width: 400px;
   }
 
-  .toast-notification.toast-success {
+  .toast-success {
     border-left: 4px solid var(--success);
   }
 
-  .toast-notification.toast-error {
-    border-left: 4px solid var(--danger);
-  }
-
-  .toast-notification.toast-info {
-    border-left: 4px solid var(--info);
-  }
-
-  .toast-notification i {
-    font-size: 18px;
-  }
-
-  .toast-notification.toast-success i {
-    color: var(--success);
-  }
-
-  .toast-notification.toast-error i {
-    color: var(--danger);
-  }
-
-  .toast-notification.toast-info i {
-    color: var(--info);
+  .toast-error {
+    border-left: 4px solid #d62828;
   }
 
   .toast-close {
-    margin-left: auto;
     background: none;
     border: none;
     font-size: 20px;
-    color: var(--muted);
+    color: var(--text-light);
     cursor: pointer;
-    padding: 0;
   }
 
   @keyframes slideIn {
@@ -917,65 +506,23 @@
     }
   }
 
-  /* Responsive */
   @media (max-width: 768px) {
-    .payment-container {
-      margin: 20px auto;
-      padding: 12px;
+    .checkout-header h1 {
+      font-size: 24px;
     }
 
-    .payment-progress {
-      flex-wrap: wrap;
-      margin-bottom: 30px;
+    .card {
+      padding: 20px;
     }
 
-    .progress-line {
-      width: 30px;
-    }
-
-    .step-number {
-      width: 32px;
-      height: 32px;
-      font-size: 12px;
-    }
-
-    .step-label {
-      font-size: 10px;
-    }
-
-    .qr-code-image {
+    .qr-image {
       width: 200px;
       height: 200px;
     }
 
-    .summary-card,
-    .details-card,
-    .verification-card {
-      padding: 20px;
-    }
-
-    .total-value {
+    .summary-total .total {
       font-size: 24px;
     }
   }
 </style>
-
-<!-- Messages Display -->
-{% if messages %}
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    {% for message in messages %}
-    var alertType = '{{ message.tags }}' || 'info';
-    var alertHtml = `
-      <div class="toast-notification toast-{{ alertType }}">
-        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
-        <span>{{ message }}</span>
-        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('afterbegin', alertHtml);
-    {% endfor %}
-  });
-</script>
-{% endif %}
 {% endblock %}

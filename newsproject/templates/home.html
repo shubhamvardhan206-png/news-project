@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
-{% block content %}
+{% load static %}
 
+{% block content %}
 
 <!-- Breaking News Ticker -->
 <div class="bg-danger text-white py-2">
@@ -10,11 +11,43 @@
   </div>
 </div>
 
-<!-- Hero Featured Article -->
-{% if featured %}
+<!-- Hero Featured Article with Left Sidebar Ads -->
+{% if featured and featured.slug %}
 <div class="container my-4">
   <div class="row">
-    <div class="col-md-8">
+    <!-- Left Sidebar Advertisements -->
+    <div class="col-md-2 mb-4">
+      <div class="sticky-top" style="top: 20px;">
+        {% for ad in sidebar_ads %}
+          <div class="card border-0 shadow-sm mb-3" style="overflow: hidden; cursor: pointer;">
+            {% if ad.image %}
+              <img src="{{ ad.image.url }}" 
+                   alt="{{ ad.title }}"
+                   style="width: 100%; height: auto; display: block;"
+                   onclick="{% if ad.link %}window.location.href='{{ ad.link }}';{% endif %}">
+            {% else %}
+              <div class="bg-light d-flex align-items-center justify-content-center" 
+                   style="height: 200px;"
+                   onclick="{% if ad.link %}window.location.href='{{ ad.link }}';{% endif %}">
+                <div class="text-center p-2">
+                  <p class="fw-bold text-danger">{{ ad.title }}</p>
+                </div>
+              </div>
+            {% endif %}
+            {% if ad.description %}
+              <div class="card-body p-2">
+                <small class="text-muted">{{ ad.description|truncatewords:10 }}</small>
+              </div>
+            {% endif %}
+          </div>
+        {% empty %}
+          <!-- Empty sidebar - space for ads -->
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Main Featured Article -->
+    <div class="col-md-7">
       <div class="card border-0 shadow-lg overflow-hidden">
         {% if featured.image %}
         <img src="{{ featured.image.url }}" 
@@ -29,17 +62,17 @@
         <div class="card-body">
           <span class="badge bg-danger mb-2">Featured</span>
           <h2 class="card-title">
-            <a href="{% url 'article_detail' featured.slug %}" 
+            <a href="/article/{{ featured.slug }}/" 
                class="text-dark text-decoration-none">
               {{ featured.title }}
             </a>
           </h2>
-          <p class="text-muted">{{ featured.summary|truncatewords:30 }}</p>
+          <p class="text-muted">{{ featured.summary|default:featured.content|truncatewords:30 }}</p>
           <div class="d-flex justify-content-between align-items-center">
             <small class="text-muted">
               👁 {{ featured.views }} views
             </small>
-            <a href="{% url 'article_detail' featured.slug %}" 
+            <a href="/article/{{ featured.slug }}/" 
                class="btn btn-danger">
               Read More →
             </a>
@@ -49,22 +82,26 @@
     </div>
 
     <!-- Sidebar Trending -->
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="card border-0 shadow h-100">
         <div class="card-header bg-dark text-white">
           🔥 Trending Now
         </div>
         <div class="card-body p-0">
           {% for article in trending %}
+          {% if article.slug %}
           <div class="border-bottom p-3">
             <span class="badge bg-danger me-1">{{ forloop.counter }}</span>
-            <a href="{% url 'article_detail' article.slug %}" 
+            <a href="/article/{{ article.slug }}/" 
                class="text-dark text-decoration-none fw-bold">
               {{ article.title|truncatewords:8 }}
             </a>
             <br>
             <small class="text-muted">👁 {{ article.views }}</small>
           </div>
+          {% endif %}
+          {% empty %}
+          <div class="p-3 text-muted">No trending articles</div>
           {% endfor %}
         </div>
       </div>
@@ -73,15 +110,42 @@
 </div>
 {% endif %}
 
+<!-- Top Services -->
+{% if top_services %}
+<div class="container my-4">
+  <h4 class="border-start border-success border-4 ps-2 mb-3">Top Services</h4>
+  <div class="row g-3">
+    {% for svc in top_services %}
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm">
+        {% if svc.image %}
+          <img src="{{ svc.image.url }}" alt="{{ svc.title }}" class="card-img-top" style="height:180px; object-fit:cover;">
+        {% else %}
+          <div class="bg-light d-flex align-items-center justify-content-center" style="height:180px;">
+            <i class="fa-solid fa-circle-info fa-2x text-secondary"></i>
+          </div>
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ svc.title }}</h5>
+          <p class="card-text text-muted">{{ svc.short_description|default:svc.description|truncatewords:20 }}</p>
+          <a href="/services/" class="btn btn-sm btn-outline-danger">Learn More ℹ️</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 <!-- Category Filter -->
 <div class="container my-3">
   <div class="d-flex gap-2 flex-wrap">
-    <a href="/" 
+    <a href="/home/" 
        class="btn {% if not active_category %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm">
       All
     </a>
     {% for cat in categories %}
-    <a href="/?category={{ cat.slug }}" 
+    <a href="/home/?category={{ cat.slug }}" 
        class="btn {% if active_category == cat.slug %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm">
       {{ cat.name }}
     </a>
@@ -96,6 +160,7 @@
   </h4>
   <div class="row g-4">
     {% for article in articles %}
+    {% if article.slug %}
     <div class="col-md-4">
       <div class="card h-100 border-0 shadow-sm hover-shadow">
         {% if article.image and article.image.url %}
@@ -105,7 +170,6 @@
                style="height:200px; object-fit:cover;">
         {% else %}
           <div class="bg-light d-flex align-items-center justify-content-center" style="height:200px; background-color: #f0f0f0 !important;">
-            <!-- Empty div - no icon -->
           </div>
         {% endif %}
         
@@ -122,7 +186,7 @@
           {% endif %}
           
           <h5 class="card-title">
-            <a href="{% url 'article_detail' article.slug %}" 
+            <a href="/article/{{ article.slug }}/" 
                class="text-dark text-decoration-none">
               {{ article.title }}
             </a>
@@ -138,7 +202,7 @@
             <small class="text-muted">
               👁 {{ article.views|default:"0" }} views
             </small>
-            <a href="{% url 'article_detail' article.slug %}" 
+            <a href="/article/{{ article.slug }}/" 
                class="btn btn-sm btn-danger">
               Read →
             </a>
@@ -146,25 +210,23 @@
         </div>
       </div>
     </div>
+    {% endif %}
     {% empty %}
     <div class="col-12 text-center py-5">
-      <h4 class="text-muted">No articles yet</h4>
+      <h4 class="text-muted">No articles available</h4>
     </div>
     {% endfor %}
   </div>
 </div>
 
-<!-- API World News -->
-
-          {% if api_news %}
+<!-- World & India News from API -->
+{% if api_news %}
 <div class="container my-5">
-  
-  <!-- Heading — category ke hisaab se -->
   <h4 class="border-start border-primary border-4 ps-2 mb-4">
-    🌍 {% if active_category %}{{ active_category|title }}{% else %}Latest{% endif %} World & India News
+    🌍 Latest World & India News
   </h4>
 
-  <!-- India News -->
+  <!-- India News Section -->
   <h5 style="color:#e63946; margin-bottom:10px;">🇮🇳 India News</h5>
   <div class="row g-3 mb-4">
     {% for news in api_news %}
@@ -174,14 +236,15 @@
         {% if news.urlToImage %}
         <img src="{{ news.urlToImage }}" 
              style="height:150px; object-fit:cover; width:100%;"
-             onerror="this.style.display='none'">
+             onerror="this.style.display='none'"
+             alt="News image">
         {% endif %}
         <div class="card-body py-2">
           <small class="text-danger fw-bold">{{ news.source.name }}</small>
           <p class="card-text small fw-bold mt-1">
             {{ news.title|truncatechars:80 }}
           </p>
-          <a href="{{ news.url }}" target="_blank" 
+          <a href="{{ news.url }}" target="_blank" rel="noopener noreferrer"
              class="btn btn-sm btn-outline-danger">
             Read →
           </a>
@@ -192,7 +255,7 @@
     {% endfor %}
   </div>
 
-  <!-- World News -->
+  <!-- World News Section -->
   <h5 style="color:#2980b9; margin-bottom:10px;">🌍 World News</h5>
   <div class="row g-3">
     {% for news in api_news %}
@@ -202,14 +265,15 @@
         {% if news.urlToImage %}
         <img src="{{ news.urlToImage }}" 
              style="height:150px; object-fit:cover; width:100%;"
-             onerror="this.style.display='none'">
+             onerror="this.style.display='none'"
+             alt="News image">
         {% endif %}
         <div class="card-body py-2">
           <small class="text-primary fw-bold">{{ news.source.name }}</small>
           <p class="card-text small fw-bold mt-1">
             {{ news.title|truncatechars:80 }}
           </p>
-          <a href="{{ news.url }}" target="_blank" 
+          <a href="{{ news.url }}" target="_blank" rel="noopener noreferrer"
              class="btn btn-sm btn-outline-primary">
             Read →
           </a>
@@ -219,7 +283,296 @@
     {% endif %}
     {% endfor %}
   </div>
-
 </div>
 {% endif %}
+
+<!-- BOTTOM BANNER ADVERTISEMENTS -->
+{% for ad in bottom_banner_ads %}
+  <div class="container my-4">
+    <div class="card border-0 shadow-lg overflow-hidden" style="cursor: pointer; height: 200px;"
+         onclick="{% if ad.link %}window.location.href='{{ ad.link }}';{% endif %}">
+      <div style="display: flex; align-items: center; justify-content: center; height: 100%; position: relative;">
+        {% if ad.image %}
+          <img src="{{ ad.image.url }}" 
+               alt="{{ ad.title }}"
+               style="width: 100%; height: 100%; object-fit: cover;">
+        {% else %}
+          <div class="bg-gradient-primary w-100 h-100 d-flex align-items-center justify-content-center"
+               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="text-center text-white">
+              <h3 class="mb-2">{{ ad.title }}</h3>
+              <p class="lead">{{ ad.description }}</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+<!-- ==================== OPTIMIZED ADVERTISEMENT & FEEDBACK SECTIONS ==================== -->
+<div class="container my-5">
+  <div class="row g-4">
+    
+    <!-- Advertisement Section -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-lg overflow-hidden ad-card-blue position-relative">
+        <div class="ad-card-bg"></div>
+        <div class="card-body p-4 p-md-5 position-relative z-1">
+          <div class="d-flex align-items-start gap-3 mb-3">
+            <div class="ad-icon-box">
+              📢
+            </div>
+            <h3 class="card-title mb-0 text-white fw-bold">
+              Advertise Your Business Here
+            </h3>
+          </div>
+          
+          <p class="card-text text-white-50 mb-4" style="font-size: 15px; line-height: 1.6;">
+            Reach thousands of readers across your region. Grow your business with our targeted advertising solutions.
+          </p>
+          
+          <a href="/advertise/" class="btn btn-light btn-lg fw-bold btn-hover-lift">
+            Advertise Now <span style="margin-left: 8px;">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback Section -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-lg overflow-hidden ad-card-pink position-relative">
+        <div class="ad-card-bg"></div>
+        <div class="card-body p-4 p-md-5 position-relative z-1">
+          <div class="d-flex align-items-start gap-3 mb-3">
+            <div class="ad-icon-box">
+              💬
+            </div>
+            <h3 class="card-title mb-0 text-white fw-bold">
+              Help Us Improve
+            </h3>
+          </div>
+          
+          <p class="card-text text-white-50 mb-4" style="font-size: 15px; line-height: 1.6;">
+            Share your feedback and suggestions with us.
+          </p>
+          
+          <a href="/feedback/" class="btn btn-light btn-lg fw-bold btn-hover-lift">
+            Send Feedback <span style="margin-left: 8px;">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- News by Location Widget Section -->
+<section style="padding: 30px; background: #f9f9f9; border-radius: 8px; margin: 20px 0;">
+  <div class="container">
+    <h2>📍 Search News by Location</h2>
+    <p>Select your state and district to find local news</p>
+    
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+      <select id="home-state-select" onchange="homeLoadDistricts()" style="padding: 10px; min-width: 200px;">
+        <option value="">Select State</option>
+      </select>
+      
+      <select id="home-district-select" style="padding: 10px; min-width: 200px;">
+        <option value="">Select District</option>
+      </select>
+      
+      <button onclick="homeSearchNews()" style="padding: 10px 20px; background: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Search News
+      </button>
+    </div>
+    
+    <div id="home-location-error" style="color: red; margin-top: 10px; font-weight: bold;"></div>
+  </div>
+</section>
+
+<style>
+.hover-shadow:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+/* ==================== ADVERTISEMENT & FEEDBACK CARD STYLES ==================== */
+
+.ad-card-blue {
+  background: linear-gradient(135deg, #5b7ce6 0%, #3d5ac9 100%);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ad-card-blue:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(91, 124, 230, 0.35) !important;
+}
+
+.ad-card-pink {
+  background: linear-gradient(135deg, #e886b5 0%, #c85a9d 100%);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ad-card-pink:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(232, 134, 181, 0.35) !important;
+}
+
+.ad-card-bg {
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.ad-icon-box {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.btn-hover-lift {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  color: #3d5ac9 !important;
+}
+
+.ad-card-pink .btn-hover-lift:hover {
+  color: #c85a9d !important;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-30px, -30px);
+  }
+}
+
+.z-1 {
+  position: relative;
+  z-index: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ad-card-blue,
+  .ad-card-pink {
+    .card-body {
+      padding: 28px !important;
+    }
+  }
+
+  .ad-icon-box {
+    width: 45px;
+    height: 45px;
+    font-size: 24px;
+  }
+
+  .card-title {
+    font-size: 20px !important;
+  }
+
+  .btn-lg {
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .ad-card-blue,
+  .ad-card-pink {
+    .card-body {
+      padding: 20px !important;
+    }
+  }
+
+  .ad-icon-box {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .card-title {
+    font-size: 18px !important;
+  }
+
+  .btn-lg {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+  }
+
+  .d-flex.align-items-start.gap-3 {
+    flex-direction: column;
+    gap: 12px !important;
+  }
+}
+</style>
+
+<script>
+// Load states on homepage
+fetch('/api/states/')
+  .then(r => r.json())
+  .then(data => {
+    const states = Array.isArray(data) ? data : (data.states || data.results || []);
+    const sel = document.getElementById('home-state-select');
+    states.forEach(s => {
+      sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+    });
+  })
+  .catch(e => {
+    document.getElementById('home-location-error').textContent = '❌ Error loading states: ' + e.message;
+  });
+
+function homeLoadDistricts() {
+  const stateId = document.getElementById('home-state-select').value;
+  const sel = document.getElementById('home-district-select');
+  sel.innerHTML = '<option value="">Select District</option>';
+  if (!stateId) return;
+
+  fetch(`/api/state-districts/${stateId}/`)
+    .then(r => r.json())
+    .then(data => {
+      const districts = Array.isArray(data) ? data : (data.districts || data.results || []);
+      districts.forEach(d => {
+        sel.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+      });
+    })
+    .catch(e => {
+      document.getElementById('home-location-error').textContent = '❌ Error loading districts: ' + e.message;
+    });
+}
+
+function homeSearchNews() {
+  const stateId = document.getElementById('home-state-select').value;
+  const districtId = document.getElementById('home-district-select').value;
+  
+  if (!stateId) {
+    document.getElementById('home-location-error').textContent = '⚠️ Please select a state';
+    return;
+  }
+  
+  let url = '/news-by-location/?state=' + stateId;
+  if (districtId) url += '&district=' + districtId;
+  window.location.href = url;
+}
+</script>
+
 {% endblock %}

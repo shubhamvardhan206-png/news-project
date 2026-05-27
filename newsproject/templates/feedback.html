@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  .feedback-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .feedback-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  .feedback-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .feedback-form {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 150px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .rating-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .rating-group input[type="radio"] {
+    display: none;
+  }
+
+  .rating-group label {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f0;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    margin: 0;
+  }
+
+  .rating-group input[type="radio"]:checked + label {
+    background: #ffc107;
+    transform: scale(1.1);
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  }
+
+  .message {
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+  }
+
+  .message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .feedback-header h1 {
+      font-size: 1.8rem;
+    }
+
+    .feedback-form {
+      padding: 20px;
+    }
+  }
+</style>
+
+<!-- Header -->
+<div class="feedback-header">
+  <div class="container">
+    <h1>📬 Send Us Your Feedback</h1>
+    <p>We value your opinions and suggestions to improve our service</p>
+  </div>
+</div>
+
+<!-- Feedback Form -->
+<div class="feedback-container">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="feedback-form">
+    <form method="POST">
+      {% csrf_token %}
+
+      <!-- Name & Email Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input type="text" id="name" name="name" required placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input type="email" id="email" name="email" required placeholder="your@email.com">
+        </div>
+      </div>
+
+      <!-- Phone -->
+      <div class="form-group">
+        <label for="phone">Phone Number (Optional)</label>
+        <input type="tel" id="phone" name="phone" placeholder="+91 98765-43210">
+      </div>
+
+      <!-- Feedback Type & Subject Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="feedback_type">Feedback Type *</label>
+          <select id="feedback_type" name="feedback_type" required>
+            <option value="">Select type</option>
+            {% for value, label in feedback_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="subject">Subject *</label>
+          <input type="text" id="subject" name="subject" required placeholder="What is this about?">
+        </div>
+      </div>
+
+      <!-- Rating -->
+      <div class="form-group">
+        <label>Rate Your Experience *</label>
+        <div class="rating-group">
+          <input type="radio" id="star1" name="rating" value="1">
+          <label for="star1">⭐</label>
+
+          <input type="radio" id="star2" name="rating" value="2">
+          <label for="star2">⭐</label>
+
+          <input type="radio" id="star3" name="rating" value="3">
+          <label for="star3">⭐</label>
+
+          <input type="radio" id="star4" name="rating" value="4">
+          <label for="star4">⭐</label>
+
+          <input type="radio" id="star5" name="rating" value="5" checked>
+          <label for="star5">⭐</label>
+        </div>
+      </div>
+
+      <!-- Message -->
+      <div class="form-group">
+        <label for="message">Your Feedback *</label>
+        <textarea id="message" name="message" required placeholder="Please share your detailed feedback..."></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn-submit">
+        📤 Submit Feedback
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

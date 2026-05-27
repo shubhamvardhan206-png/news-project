@@ -194,7 +194,7 @@
         E-Paper
       </a>
       {% for cat in categories|slice:":6" %}
-      <a href="{% url 'category_articles' cat.slug %}" 
+      <a href="{% url 'category_articles' cat.slug %}"
          style="color:#ccc; text-decoration:none; padding:5px 10px; font-size:13px; white-space:nowrap;">
         {{ cat.name }}
       </a>
@@ -288,31 +288,21 @@
 </div>
 
 <div style="max-width:1400px; margin:10px auto; padding:0 20px; text-align:center;">
-  {% include 'ads/ad_banner.html' %}
+  <!-- Ad Banner (optional - create ads/ad_banner.html if needed) -->
 </div>
 
 {% if messages %}
   <div class="messages-bar">
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      <div class="alert alert-{{ message.tags }}">
+        <span>{{ message }}</span>
+      </div>
     {% endfor %}
   </div>
 {% endif %}
 
 <main class="site-main">
-  <div class="container-fluid p-0">
-    <div class="row g-4">
-      
-      <div class="col-lg-9 col-12">
-        {% block content %}{% endblock %}
-      </div>
-
-      <div class="col-lg-3 col-12 d-none d-lg-block" style="position: sticky; top: 80px; height: fit-content;">
-        {% include 'ads/ad_sidebar.html' %}
-      </div>
-
-    </div>
-  </div>
+  {% block content %}{% endblock %}
 </main>
 
 <footer>
@@ -320,92 +310,54 @@
     <div>
       <div class="footer-brand">News<span>Portal</span></div>
       <p class="footer-desc">Your trusted source for breaking news, in-depth analysis, and stories that matter. Committed to accurate, independent journalism.</p>
-      
-      <!-- Social Media Links -->
-      <div style="margin-top: 20px;">
-        <div class="footer-heading" style="margin-bottom: 12px;">Follow Us</div>
-        <div style="display: flex; gap: 16px; align-items: center;">
-          <a href="https://twitter.com/newportal" target="_blank" rel="noopener noreferrer" 
-             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #1DA1F2; color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
-             title="Follow us on Twitter">
-            <i class="fab fa-twitter"></i>
-          </a>
-          <a href="https://facebook.com/newportal" target="_blank" rel="noopener noreferrer"
-             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #1877F2; color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
-             title="Like us on Facebook">
-            <i class="fab fa-facebook-f"></i>
-          </a>
-          <a href="https://instagram.com/newportal" target="_blank" rel="noopener noreferrer"
-             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(45deg, #fd5949, #d6249f, #285AEB); color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
-             title="Follow us on Instagram">
-            <i class="fab fa-instagram"></i>
-          </a>
-          <a href="https://youtube.com/newportal" target="_blank" rel="noopener noreferrer"
-             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #FF0000; color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
-             title="Subscribe on YouTube">
-            <i class="fab fa-youtube"></i>
-          </a>
-          <a href="https://linkedin.com/company/newportal" target="_blank" rel="noopener noreferrer"
-             style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #0A66C2; color: white; border-radius: 50%; transition: all 0.3s; text-decoration: none;"
-             title="Connect on LinkedIn">
-            <i class="fab fa-linkedin-in"></i>
-          </a>
+      <div style="margin-top:16px;">
+        <h6 class="footer-heading">Follow Us</h6>
+        <div style="display:flex; gap:12px;">
+          <a href="https://twitter.com/newportal" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:#1da1f2; color:white; border-radius:50%;"><i class="fab fa-twitter"></i></a>
+          <a href="https://facebook.com/newportal" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:#1877f2; color:white; border-radius:50%;"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://instagram.com/newportal" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:#e1306c; color:white; border-radius:50%;"><i class="fab fa-instagram"></i></a>
+          <a href="https://youtube.com/newportal" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:#ff0000; color:white; border-radius:50%;"><i class="fab fa-youtube"></i></a>
         </div>
       </div>
     </div>
-    
     <div>
-      <div class="footer-heading">Sections</div>
+      <h6 class="footer-heading">Sections</h6>
       <ul class="footer-links">
         <li><a href="{% url 'home' %}">Home</a></li>
-        {% for cat in categories %}
-          <li><a href="{% url 'category_articles' cat.slug %}">{{ cat.name }}</a></li>
+        {% for cat in categories|slice:":5" %}
+        <li><a href="{% url 'category_articles' cat.slug %}">{{ cat.name }}</a></li>
         {% endfor %}
       </ul>
-      
-      <div class="footer-heading" style="margin-top: 24px;">More</div>
-      <ul class="footer-links">
-        <li><a href="{% url 'subscription_plans' %}">Subscribe</a></li>
-        <li><a href="{% url 'epaper' %}">E-Paper</a></li>
-        <li><a href="#about">About Us</a></li>
-        <li><a href="#contact">Contact Us</a></li>
-        <li><a href="#advertise">Advertise</a></li>
-      </ul>
     </div>
-    
     <div>
-      <div class="footer-heading">Account</div>
+      <h6 class="footer-heading">Account</h6>
       <ul class="footer-links">
         {% if user.is_authenticated %}
           <li><a href="{% url 'logout' %}">Logout</a></li>
-          {% if user.is_staff %}<li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>{% endif %}
+          {% if user.is_staff %}
+          <li><a href="{% url 'admin_dashboard' %}">Admin Panel</a></li>
+          {% endif %}
         {% else %}
-          <li><a href="{% url 'login' %}">Sign In</a></li>
+          <li><a href="{% url 'login' %}">Login</a></li>
           <li><a href="{% url 'register' %}">Register</a></li>
         {% endif %}
-        <li><a href="/admin/">Admin Panel</a></li>
-      </ul>
-      
-      <div class="footer-heading" style="margin-top: 24px;">Legal</div>
-      <ul class="footer-links">
-        <li><a href="#privacy">Privacy Policy</a></li>
-        <li><a href="#terms">Terms of Use</a></li>
-        <li><a href="#cookies">Cookie Policy</a></li>
+        <li><a href="{% url 'subscription_plans' %}">Premium Plans</a></li>
       </ul>
     </div>
   </div>
-  
   <div class="footer-bottom">
-    <span>&copy; 2026 NewsPortal. All rights reserved.</span>
-    <span>Built with Django</span>
+    <p>&copy; 2024 NewsPortal. All rights reserved.</p>
+    <p>Privacy Policy | Terms of Use</p>
   </div>
 </footer>
 
 <script>
-  function toggleMenu() {
-    document.getElementById('mobileMenu').classList.toggle('open');
-  }
+function toggleMenu() {
+  const menu = document.getElementById('mobileMenu');
+  menu.classList.toggle('open');
+}
 </script>
+
 {% block extra_js %}{% endblock %}
-<script>
-function show
+</body>
+</html>
