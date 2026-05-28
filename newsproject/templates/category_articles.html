@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {{ category.name }} — Category Articles | NewsPortal
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 24px 0;">
+
+  <div style="margin-bottom: 18px;">
+    <a href="{% url 'home' %}" style="color: var(--accent); font-weight: 600;">Home</a>
+    <span style="color: var(--muted);"> > </span>
+    <span style="color: var(--ink); font-weight: 800;">{{ category.name }}</span>
+  </div>
+
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap: 16px; flex-wrap:wrap;">
+    <div>
+      <h1 style="font-family: var(--serif); font-size: 36px; font-weight: 900; margin: 0; color: var(--ink);">
+        {{ category.name }}
+      </h1>
+      <p style="color: var(--muted); margin-top: 8px;">
+        Showing {{ articles|length }} article{{ articles|length|pluralize }}
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top: 22px;">
+
+    <!-- API NEWS (India + World Latest) -->
+    {% if api_news %}
+      <div style="margin-bottom: 26px;">
+        <h2 style="font-family: var(--serif); font-size: 26px; font-weight: 900; color: var(--ink); margin: 0 0 12px;">
+          Latest News from API (India & World)
+        </h2>
+        <div class="row" style="row-gap: 18px;">
+          {% for item in api_news %}
+            <div class="col-md-6" style="padding: 0 10px;">
+              <div style="border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--card-bg); height: 100%;">
+
+
+                <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 800; margin: 0 0 10px; color: var(--ink);">
+                  {{ item.title|default:"" }}
+                </h3>
+
+                <p style="color: var(--muted); line-height: 1.6; margin: 0 0 12px;">
+                  {{ item.description|default:""|truncatechars:170 }}
+                </p>
+
+                <div style="color: var(--muted); font-size: 13px; display:flex; gap: 12px; flex-wrap:wrap; margin-bottom: 14px;">
+                  <span>{{ item.source_region|default:"" }}</span>
+                  <span>•</span>
+                  <span>{{ item.publishedAt|default:"" }}</span>
+                </div>
+
+                <a href="{{ item.url|default:'#' }}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block; background: var(--accent); color:#fff; padding: 10px 18px; border-radius: 8px; font-weight: 700; text-decoration:none;">
+                  Read
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- DATABASE ARTICLES -->
+    {% if articles %}
+      <div class="row" style="row-gap: 18px;">
+        {% for article in articles %}
+          <div class="col-md-6" style="padding: 0 10px;">
+            <div style="border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--card-bg); height: 100%;">
+
+
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px;">
+                <div style="flex: 1;">
+                  <h3 style="font-family: var(--serif); font-size: 20px; font-weight: 800; margin: 0 0 10px; color: var(--ink);">
+                    {{ article.title }}
+                  </h3>
+
+                  {% if article.summary %}
+                    <p style="color: var(--muted); line-height: 1.6; margin: 0 0 12px;">
+                      {{ article.summary|truncatechars:160 }}
+                    </p>
+                  {% endif %}
+
+                  <div style="color: var(--muted); font-size: 13px; display:flex; gap: 12px; flex-wrap:wrap; margin-bottom: 14px;">
+                    <span>{{ article.published_at|date:"F d, Y" }}</span>
+                    <span>•</span>
+                    <span>{{ article.views }} views</span>
+                  </div>
+
+                  <a href="{% url 'article_detail' article.slug %}" style="display:inline-block; background: var(--accent); color: #fff; padding: 10px 18px; border-radius: 8px; font-weight: 700; text-decoration:none;">
+                    Read
+                  </a>
+                </div>
+
+                {% if article.image %}
+                  <div style="width: 92px; flex-shrink: 0;">
+                    <img src="{{ article.image.url }}" alt="{{ article.title }}" style="width: 92px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border);" />
+                  </div>
+                {% endif %}
+
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="padding: 28px; border: 1px dashed var(--border); border-radius: 12px; color: var(--muted);">
+        No articles found for this category.
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+

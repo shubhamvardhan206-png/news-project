@@ -71,7 +71,7 @@ def test_api_endpoints():
         if response.status_code == 200:
             data = response.json()
             print(f"[OK] News by location endpoint working")
-            print(f"  Articles found: {data['count']}")
+            print(f"  Articles found: {len(data.get('articles', []))}")
             if data['news']:
                 print(f"  Sample: {data['news'][0]['title']}")
         else:

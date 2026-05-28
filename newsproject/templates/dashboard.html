@@ -7,6 +7,71 @@
   .dash-header h1 { font-family: var(--serif); font-size: 36px; font-weight: 800; }
   .dash-header p { color: var(--muted); font-size: 14px; margin-top: 6px; }
 
+  /* FILTER SECTION */
+  .dash-filters {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 24px;
+    margin-bottom: 32px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+    margin-right: 6px;
+  }
+  .filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+  }
+  .filter-select:hover {
+    border-color: var(--accent);
+    background: var(--card-bg);
+  }
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.1);
+  }
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .filter-reset-btn {
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: auto;
+  }
+  .filter-reset-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -103,12 +168,30 @@
     border-radius: 2px;
   }
 
+  @media (max-width: 1024px) {
+    .dash-filters {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .filter-reset-btn {
+      margin-left: 0;
+      align-self: flex-end;
+    }
+  }
+
   @media (max-width: 900px) {
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .dash-layout { grid-template-columns: 1fr; }
   }
   @media (max-width: 480px) {
     .stats-grid { grid-template-columns: 1fr; }
+    .dash-filters {
+      gap: 12px;
+    }
+    .filter-select {
+      min-width: 100px;
+      font-size: 12px;
+    }
   }
 </style>
 {% endblock %}
@@ -117,6 +200,32 @@
 <div class="dash-header">
   <h1>Dashboard</h1>
   <p>Welcome back, {{ user.username }}. Here's your newsroom overview.</p>
+</div>
+
+<!-- FILTER SECTION -->
+<div class="dash-filters">
+  <div class="filter-group">
+    <label class="filter-label">Week</label>
+    <select id="weekFilter" class="filter-select">
+      <option value="">Select Week...</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label class="filter-label">Month</label>
+    <select id="monthFilter" class="filter-select">
+      <option value="">Select Month...</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label class="filter-label">Year</label>
+    <select id="yearFilter" class="filter-select">
+      <option value="">All Years (2026-2076)</option>
+    </select>
+  </div>
+
+  <button id="resetFilters" class="filter-reset-btn">Reset Filters</button>
 </div>
 
 <!-- STATS -->
@@ -237,4 +346,100 @@
     </table>
   </div>
 </div>
+
+<!-- FILTER LOGIC JAVASCRIPT -->
+<script>
+  // Days of the week
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  
+  // Months of the year
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December'];
+
+  // Function to check if a year is a leap year
+  function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+  }
+
+  // Initialize week filter
+  function initWeekFilter() {
+    const weekSelect = document.getElementById('weekFilter');
+    daysOfWeek.forEach((day, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = day;
+      weekSelect.appendChild(option);
+    });
+    
+    weekSelect.addEventListener('change', function() {
+      const selectedDay = daysOfWeek[this.value];
+      console.log('Week Filter Changed:', selectedDay);
+      // Add your filtering logic here
+    });
+  }
+
+  // Initialize month filter
+  function initMonthFilter() {
+    const monthSelect = document.getElementById('monthFilter');
+    const yearSelect = document.getElementById('yearFilter');
+    
+    months.forEach((month, index) => {
+      const option = document.createElement('option');
+      option.value = index + 1;
+      option.textContent = month;
+      monthSelect.appendChild(option);
+    });
+    
+    monthSelect.addEventListener('change', function() {
+      const selectedMonth = months[this.value - 1];
+      const selectedYear = yearSelect.value;
+      const isLeap = selectedYear ? isLeapYear(parseInt(selectedYear)) : false;
+      
+      console.log('Month Filter Changed:', selectedMonth);
+      if (selectedYear) {
+        console.log('Year:', selectedYear, '- Leap Year:', isLeap);
+      }
+      // Add your filtering logic here
+    });
+  }
+
+  // Initialize year filter (2026 to 2076)
+  function initYearFilter() {
+    const yearSelect = document.getElementById('yearFilter');
+    
+    for (let year = 2026; year <= 2076; year++) {
+      const option = document.createElement('option');
+      option.value = year;
+      option.textContent = year + (isLeapYear(year) ? ' (Leap)' : '');
+      yearSelect.appendChild(option);
+    }
+    
+    yearSelect.addEventListener('change', function() {
+      const selectedYear = this.value;
+      const isLeap = selectedYear ? isLeapYear(parseInt(selectedYear)) : false;
+      
+      console.log('Year Filter Changed:', selectedYear, '- Leap Year:', isLeap);
+      // Add your filtering logic here
+    });
+  }
+
+  // Reset filters
+  function resetFilters() {
+    document.getElementById('weekFilter').value = '';
+    document.getElementById('monthFilter').value = '';
+    document.getElementById('yearFilter').value = '';
+    console.log('Filters Reset');
+    // Add your reset logic here
+  }
+
+  // Event listener for reset button
+  document.getElementById('resetFilters').addEventListener('click', resetFilters);
+
+  // Initialize all filters when DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    initWeekFilter();
+    initMonthFilter();
+    initYearFilter();
+  });
+</script>
 {% endblock %}

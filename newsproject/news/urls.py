@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-     path('', views.welcome, name='welcome'),
+    path('', views.welcome, name='welcome'),  # ←
     
     # News homepage - shown after redirect from welcome
     path('home/', views.home, name='home'),
@@ -32,7 +32,14 @@ urlpatterns = [
     path('dashboard/payments/', views.admin_payment_history, name='admin_payment_history'),
     path('dashboard/user/<int:user_id>/subscription/', views.user_subscription_detail, name='user_subscription_detail'),
     path('dashboard/share-links/', views.generate_share_links, name='generate_share_links'),
-
+    path('receipt/<int:payment_id>/', views.payment_receipt, name='payment_receipt'),
+    path('contact/', views.contact_us, name='contact_us'),
+    path('advertise/', views.advertise_with_us, name='advertise_with_us'),
+    path('privacy/', views.privacy_policy, name='privacy_policy'),
+    path('terms/', views.terms_of_use, name='terms_of_use'),
+    path('cookies/', views.cookie_policy, name='cookie_policy'),
+    path('about/', views.about_us, name='about_us'),
+    path('meet-developers/', views.meet_developers, name='meet_developers'),
     # Location API endpoints
     path('api/states/', views.api_get_states, name='api_get_states'),
     path('api/districts/', views.api_get_districts, name='api_get_districts'),

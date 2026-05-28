@@ -293,7 +293,7 @@
   <a href="{% url 'home' %}">Home</a>
   <span>›</span>
   {% if article.category %}
-    <a href="{% url 'category' article.category.slug %}">{{ article.category.name }}</a>
+    <a href="{% url 'category_articles' article.category.slug %}">{{ article.category.name }}</a>
     <span>›</span>
   {% endif %}
   <span>{{ article.title|truncatechars:40 }}</span>
@@ -303,9 +303,9 @@
   <!-- MAIN ARTICLE -->
   <article>
     <div class="article-header">
-      {% if article.category %}
-        <a href="{% url 'category' article.category.slug %}" class="article-category">{{ article.category.name }}</a>
-      {% endif %}
+  {% if article.category %}
+    <a href="{% url 'category_articles' article.category.slug %}" class="article-category">{{ article.category.name }}</a>
+  {% endif %}
       <h1 class="article-title">{{ article.title }}</h1>
       {% if article.summary %}
         <p class="article-summary">{{ article.summary }}</p>
@@ -513,21 +513,27 @@
   const slug = '{{ article.slug }}';
   let liked = {{ liked|yesno:"true,false" }};
 
- async function toggleLike() {
+async function toggleLike(slugParam) {
+    const effectiveSlug = slugParam || slug;
     const res = await fetch(`/article/${slug}/like/`, {
-        method: 'POST',        // ← GET ko POST se replace karo
+        method: 'POST',
         headers: { 'X-CSRFToken': '{{ csrf_token }}' }
     });
     const data = await res.json();
     liked = data.liked;
-    document.getElementById('likeHeart').textContent = liked ? '❤️' : '🤍';
-    document.getElementById('likeBtnText').textContent = liked ? 'Liked' : 'Like';
-    document.getElementById('like-count-display').textContent = data.count;
-    document.getElementById('likeCountBig').textContent = data.count;
-    const btn = document.getElementById('likeBtn');
-    btn.style.background = liked ? 'var(--accent)' : 'transparent';
-    btn.style.color = liked ? '#fff' : 'var(--ink)';
-    btn.style.borderColor = liked ? 'var(--accent)' : 'var(--border)';
+
+    // Update only existing DOM elements (fixes "count not updating" issue)
+    const likeCountDisplay = document.getElementById('like-count-display');
+    const likeCountBig = document.getElementById('likeCountBig');
+    if (likeCountDisplay) likeCountDisplay.textContent = data.count;
+    if (likeCountBig) likeCountBig.textContent = data.count;
+
+    const btn = document.getElementById('like-btn');
+    if (btn) {
+      btn.style.background = liked ? '#e63946' : '#fff';
+      btn.style.color = liked ? '#fff' : '#e63946';
+      btn.style.borderColor = '#e63946';
+    }
   }
 </script>
 {% endblock %}

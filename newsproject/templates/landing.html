@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsPortal - Breaking News & In-Depth Stories</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #e63946;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --accent: #2a9d8f;
+            --text: #2c3e50;
+            --border: #e0e0e0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== NAVIGATION ===== */
+        nav {
+            background: var(--dark);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        nav .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        nav .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: white;
+            text-decoration: none;
+            letter-spacing: -1px;
+        }
+
+        nav .logo span {
+            color: var(--primary);
+        }
+
+        nav .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        nav .nav-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        nav .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        nav .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid var(--primary);
+        }
+
+        nav .btn-primary:hover {
+            background: transparent;
+            color: var(--primary);
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--dark) 0%, #0f0f1e 100%);
+            color: white;
+            padding: 120px 40px;
+            position: relative;
+            overflow: hidden;
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(230, 57, 70, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(30px); }
+        }
+
+        .hero .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-content h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 72px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .hero-content h1 span {
+            color: var(--primary);
+            display: block;
+            line-height: 1.1;
+        }
+
+        .hero-content p {
+            font-size: 18px;
+            color: #ccc;
+            margin-bottom: 40px;
+            animation: slideInUp 0.8s ease-out 0.2s both;
+            max-width: 500px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 20px;
+            animation: slideInUp 0.8s ease-out 0.4s both;
+        }
+
+        .btn-large {
+            padding: 16px 48px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-large.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-large.primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(230, 57, 70, 0.3);
+        }
+
+        .btn-large.outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-large.outline:hover {
+            background: white;
+            color: var(--dark);
+        }
+
+        .hero-visual {
+            position: relative;
+            animation: slideInRight 0.8s ease-out;
+        }
+
+        .hero-visual-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 40px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .hero-visual-card h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 16px;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .hero-visual-card p {
+            font-size: 20px;
+            line-height: 1.4;
+            margin-bottom: 24px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat:first-child {
+            border-top: none;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ===== CATEGORIES ===== */
+        .categories {
+            padding: 80px 40px;
+            background: var(--light);
+        }
+
+        .categories .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 60px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .category-card {
+            background: white;
+            padding: 40px 30px;
+            text-align: center;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .category-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .category-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .category-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .category-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* ===== STATS SECTION ===== */
+        .stats {
+            background: var(--dark);
+            color: white;
+            padding: 80px 40px;
+        }
+
+        .stats .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .stat-item p {
+            color: #ccc;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ===== CTA SECTION ===== */
+        .cta-section {
+            padding: 100px 40px;
+            background: linear-gradient(135deg, var(--dark) 0%, #0f0f1e 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            margin-bottom: 24px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            color: #ccc;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 16px 56px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(230, 57, 70, 0.3);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: #0d0d0d;
+            color: #999;
+            padding: 60px 40px 20px;
+            border-top: 1px solid #222;
+        }
+
+        footer .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 40px;
+        }
+
+        footer h4 {
+            color: white;
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        footer .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        footer .logo span {
+            color: var(--primary);
+        }
+
+        footer p {
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        footer ul {
+            list-style: none;
+        }
+
+        footer ul li {
+            margin-bottom: 10px;
+        }
+
+        footer ul a {
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        footer ul a:hover {
+            color: var(--primary);
+        }
+
+        .social {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .social a {
+            width: 40px;
+            height: 40px;
+            background: #222;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            transition: all 0.3s;
+        }
+
+        .social a:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 40px;
+            border-top: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            nav .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 60px 20px;
+                min-height: auto;
+            }
+
+            .hero .container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .hero-content h1 {
+                font-size: 42px;
+            }
+
+            .stats .container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            footer .container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">News<span>Portal</span></a>
+            <div class="nav-links">
+                <a href="/home/">Home</a>
+                <a href="/epaper/">E-Paper</a>
+                <a href="/plans/">Premium</a>
+                <a href="/about/">About</a>
+                <a href="/contact/">Contact</a>
+                <a href="/plans/" class="btn-primary">Subscribe</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Trusted <span>Journalism</span> For A Connected World</h1>
+                <p>Get breaking news, in-depth analysis, and award-winning storytelling. Stay informed about what matters most to you.</p>
+                <div class="hero-cta">
+                    <a href="/home/" class="btn-large primary">Start Reading</a>
+                    <a href="/plans/" class="btn-large outline">Subscribe Now</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-visual-card">
+                    <h3>Today's Top Stories</h3>
+                    <p>"Breaking News Updates & Exclusive Insights"</p>
+                    <div class="stat">
+                        <span class="stat-label">Readers Today</span>
+                        <span class="stat-value">2.4M</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Articles Published</span>
+                        <span class="stat-value">847</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Countries Covered</span>
+                        <span class="stat-value">150+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIES SECTION -->
+    <section class="categories" id="categories">
+        <div class="container">
+            <h2 class="section-title">News Categories</h2>
+            <div class="categories-grid">
+                <div class="category-card">
+                    <div class="category-icon">🌍</div>
+                    <h3>World</h3>
+                    <p>Global news & international stories</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">💼</div>
+                    <h3>Business</h3>
+                    <p>Markets, finance & economy</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">⚽</div>
+                    <h3>Sports</h3>
+                    <p>Live scores & sports analysis</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">🔬</div>
+                    <h3>Science</h3>
+                    <p>Research & innovation</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">🎬</div>
+                    <h3>Entertainment</h3>
+                    <p>Movies, music & celebrity news</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">💻</div>
+                    <h3>Technology</h3>
+                    <p>Latest tech trends & reviews</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS SECTION -->
+    <section class="stats">
+        <div class="container">
+            <div class="stat-item">
+                <h3>2.4M</h3>
+                <p>Daily Readers</p>
+            </div>
+            <div class="stat-item">
+                <h3>847</h3>
+                <p>Articles/Day</p>
+            </div>
+            <div class="stat-item">
+                <h3>150+</h3>
+                <p>Countries</p>
+            </div>
+            <div class="stat-item">
+                <h3>42</h3>
+                <p>Awards Won</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA SECTION -->
+    <section class="cta-section">
+        <h2>Never Miss a Story</h2>
+        <p>Get unlimited access to premium journalism, breaking news alerts, and exclusive interviews. Join thousands of readers worldwide.</p>
+        <a href="/plans/" class="cta-button">Subscribe Now</a>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div>
+                <div class="logo">News<span>Portal</span></div>
+                <p>Your trusted source for accurate, independent journalism. We report the stories that matter, with integrity and clarity.</p>
+                <div class="social">
+                    <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+                    <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://linkedin.com" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4>Products</h4>
+                <ul>
+                    <li><a href="/home/">Web Edition</a></li>
+                    <li><a href="/epaper/">E-Paper</a></li>
+                    <li><a href="/plans/">Premium</a></li>
+                    <li><a href="/home/">Newsletters</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="/about/">About Us</a></li>
+                    <li><a href="/contact/">Contact</a></li>
+                    <li><a href="/advertise/">Advertise</a></li>
+                    <li><a href="/home/">Press</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="/privacy/">Privacy Policy</a></li>
+                    <li><a href="/terms/">Terms of Use</a></li>
+                    <li><a href="/cookies/">Cookie Policy</a></li>
+                    <li><a href="/home/">Accessibility</a></li> 
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            p>&copy; 2026 NewsPortal. All rights reserved.</p>
+            <p>Made with <span style="color: var(--primary);">❤</span> for truth & transparency</p>
+        </div>
+    </footer>
+</body>
+</html>

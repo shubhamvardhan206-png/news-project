@@ -363,35 +363,25 @@
         {% endfor %}
       </ul>
       
-      <div class="footer-heading" style="margin-top: 24px;">More</div>
-      <ul class="footer-links">
-        <li><a href="{% url 'subscription_plans' %}">Subscribe</a></li>
-        <li><a href="{% url 'epaper' %}">E-Paper</a></li>
-        <li><a href="#about">About Us</a></li>
-        <li><a href="#contact">Contact Us</a></li>
-        <li><a href="#advertise">Advertise</a></li>
-      </ul>
-    </div>
-    
-    <div>
-      <div class="footer-heading">Account</div>
-      <ul class="footer-links">
-        {% if user.is_authenticated %}
-          <li><a href="{% url 'logout' %}">Logout</a></li>
-          {% if user.is_staff %}<li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>{% endif %}
-        {% else %}
-          <li><a href="{% url 'login' %}">Sign In</a></li>
-          <li><a href="{% url 'register' %}">Register</a></li>
-        {% endif %}
-        <li><a href="/admin/">Admin Panel</a></li>
-      </ul>
-      
-      <div class="footer-heading" style="margin-top: 24px;">Legal</div>
-      <ul class="footer-links">
-        <li><a href="#privacy">Privacy Policy</a></li>
-        <li><a href="#terms">Terms of Use</a></li>
-        <li><a href="#cookies">Cookie Policy</a></li>
-      </ul>
+      <!-- सेक्शन 1: More -->
+<div class="footer-heading" style="margin-top: 24px;">More</div>
+<ul class="footer-links">
+  <li><a href="{% url 'subscription_plans' %}">Subscribe</a></li>
+  <li><a href="{% url 'epaper' %}">E-Paper</a></li>
+  <li><a href="{% url 'meet_developers' %}">Meet Developers</a></li>
+</a>
+  <li><a href="{% url 'about_us' %}">About Us</a></li>
+  <li><a href="{% url 'contact_us' %}">Contact Us</a></li>
+  <li><a href="{% url 'advertise_with_us' %}">Advertise</a></li>
+</ul>
+
+<!-- सेक्शन 2: Legal -->
+<div class="footer-heading" style="margin-top: 24px;">Legal</div>
+<ul class="footer-links">
+  <li><a href="{% url 'privacy_policy' %}">Privacy Policy</a></li>
+  <li><a href="{% url 'terms_of_use' %}">Terms of Use</a></li>
+  <li><a href="{% url 'cookie_policy' %}">Cookie Policy</a></li>
+</ul>
     </div>
   </div>
   

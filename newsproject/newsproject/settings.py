@@ -124,6 +124,26 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# ============================================================================
+# 📧 EMAIL CONFIGURATION
+# ============================================================================
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'  # ← अपना Gmail address लगाओ
+EMAIL_HOST_PASSWORD = 'your-app-password'  # ← Google App Password लगाओ
+DEFAULT_FROM_EMAIL = 'your-email@gmail.com'
+SERVER_EMAIL = 'your-email@gmail.com'
+
+# Custom Email Addresses
+CONTACT_EMAIL = 'contact@newsportal.com'
+ADVERTISE_EMAIL = 'ads@newsportal.com'
+GENERAL_EMAIL = 'info@newsportal.com'
+SUPPORT_EMAIL = 'support@newsportal.com'
+
+# ============================================================================
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'

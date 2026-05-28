@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+ 
+{% block title %}About Us - NewsPortal{% endblock %}
+ 
+{% block content %}
+<div class="about-container">
+  <!-- Hero Section -->
+  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 60px 20px; border-radius: 8px; margin-bottom: 40px; text-align: center;">
+    <h1 style="font-size: 48px; margin-bottom: 20px; font-family: 'Fraunces', serif; font-weight: 800;">About NewsPortal</h1>
+    <p style="font-size: 18px; max-width: 600px; margin: 0 auto; color: #ccc;">Your Trusted Source for Breaking News, In-Depth Analysis, and Stories That Matter</p>
+  </div>
+ 
+  <!-- Mission Section -->
+  <div style="background: white; padding: 40px; border-radius: 8px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <h2 style="font-size: 32px; margin-bottom: 20px; color: #1a1a2e; font-family: 'Fraunces', serif; font-weight: 800;">Our Mission</h2>
+    <p style="font-size: 16px; line-height: 1.8; color: #555; margin-bottom: 15px;">
+      At NewsPortal, we are committed to delivering accurate, timely, and independent journalism that informs and empowers our readers. Our mission is to provide comprehensive coverage of local, national, and international news while maintaining the highest standards of journalistic integrity.
+    </p>
+    <p style="font-size: 16px; line-height: 1.8; color: #555;">
+      We believe in the power of information to create positive change in society. Whether you're interested in politics, technology, business, entertainment, or sports, NewsPortal brings you the stories that matter with clarity, context, and credibility.
+    </p>
+  </div>
+ 
+  <!-- Values Section -->
+  <div style="margin-bottom: 40px;">
+    <h2 style="font-size: 32px; margin-bottom: 30px; color: #1a1a2e; font-family: 'Fraunces', serif; font-weight: 800; text-align: center;">Our Core Values</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+      
+      <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #e63946;">
+        <h3 style="font-size: 20px; color: #e63946; margin-bottom: 15px; font-weight: 700;">Accuracy</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.7;">We verify every story and fact before publishing. Our commitment to accuracy builds trust with our readers.</p>
+      </div>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #f77f00;">
+        <h3 style="font-size: 20px; color: #f77f00; margin-bottom: 15px; font-weight: 700;">Independence</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.7;">We report freely without bias or external pressure. Independent journalism is the foundation of our work.</p>
+      </div>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #06aed5;">
+        <h3 style="font-size: 20px; color: #06aed5; margin-bottom: 15px; font-weight: 700;">Transparency</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.7;">We disclose our sources and explain our reporting process. Transparency builds confidence in our journalism.</p>
+      </div>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #386641;">
+        <h3 style="font-size: 20px; color: #386641; margin-bottom: 15px; font-weight: 700;">Impact</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.7;">We aim to make a real difference. Our stories inform public discourse and contribute to positive change.</p>
+      </div>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #9d4edd;">
+        <h3 style="font-size: 20px; color: #9d4edd; margin-bottom: 15px; font-weight: 700;">Diversity</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.7;">We tell stories from diverse perspectives and voices. Inclusive journalism reflects our diverse world.</p>
+      </div>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #d62828;">
+        <h3 style="font-size: 20px; color: #d62828; margin-bottom: 15px; font-weight: 700;">Excellence</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.7;">We strive for excellence in everything we do, from reporting to presentation to digital experience.</p>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <!-- Coverage Section -->
+  <div style="background: white; padding: 40px; border-radius: 8px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <h2 style="font-size: 32px; margin-bottom: 20px; color: #1a1a2e; font-family: 'Fraunces', serif; font-weight: 800;">Our Coverage</h2>
+    <p style="font-size: 16px; line-height: 1.8; color: #555; margin-bottom: 20px;">
+      NewsPortal covers a wide range of topics to keep you informed about what's happening around the world:
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+      {% for category in categories %}
+      <div style="background: #f5f5f5; padding: 15px; border-radius: 6px; text-align: center; border-bottom: 2px solid #e63946;">
+        <a href="{% url 'category_articles' category.slug %}" style="color: #1a1a2e; font-weight: 600; text-decoration: none;">
+          {{ category.name }}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+ 
+  <!-- CTA Section -->
+  <div style="background: linear-gradient(135deg, #e63946 0%, #d62828 100%); color: white; padding: 40px; border-radius: 8px; text-align: center;">
+    <h2 style="font-size: 32px; margin-bottom: 20px; font-family: 'Fraunces', serif;">Stay Connected with Us</h2>
+    <p style="font-size: 16px; margin-bottom: 30px; color: #f0f0f0;">Subscribe to our newsletter and never miss important news</p>
+    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+      <a href="{% url 'subscription_plans' %}" style="background: white; color: #e63946; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: 700;">Subscribe Now</a>
+      <a href="{% url 'contact_us' %}" style="background: transparent; color: white; padding: 12px 30px; border: 2px solid white; border-radius: 25px; text-decoration: none; font-weight: 700;">Contact Us</a>
+    </div>
+  </div>
+ 
+</div>
+{% endblock %}

@@ -28,6 +28,9 @@ from .transactions import TransactionManager, get_transaction_context
 import feedparser
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
+
 
 
 
@@ -267,8 +270,14 @@ def article_detail(request, slug):
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    """Admin dashboard"""
-    return render(request, 'admin_dashboard.html', {
+    """Admin dashboard with time period filters"""
+    import calendar
+    from datetime import datetime
+    
+    time_period = request.GET.get('period', 'all')  # week, month, or all
+    
+    # Base dashboard stats
+    context = {
         'total_articles': Article.objects.count(),
         'total_published': Article.objects.filter(is_published=True).count(),
         'total_comments': Comment.objects.count(),
@@ -278,8 +287,34 @@ def admin_dashboard(request):
         'recent_comments': Comment.objects.order_by('-created_at')[:10],
         'top_articles': Article.objects.filter(is_published=True).order_by('-views')[:5],
         'categories': Category.objects.all(),
-    })
-
+        'time_period': time_period,
+    }
+    
+    # Week filter - Days
+    if time_period == 'week':
+        days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        context['items'] = days
+        context['item_type'] = 'day'
+    
+    # Month filter - Months
+    elif time_period == 'month':
+        current_year = datetime.now().year
+        months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ]
+        context['items'] = months
+        context['item_type'] = 'month'
+        context['current_year'] = current_year
+        context['is_leap_year'] = calendar.isleap(current_year)
+    
+    # All filter - Years
+    else:  # 'all'
+        years = list(range(2026, 2077))  # 2026 to 2076
+        context['items'] = years
+        context['item_type'] = 'year'
+    
+    return render(request, 'dashboard.html', context)
 
 def category_view(request, slug):
     """Show articles by category"""
@@ -840,6 +875,28 @@ def admin_payment_history(request):
     }
     return render(request, 'admin_payment_history.html', context)
 
+from django.shortcuts import render, get_object_or_404
+from .models import Payment  # adjust if your model is named differently
+
+def payment_receipt(request, payment_id):
+    payment = get_object_or_404(
+        Payment.objects.select_related('user', 'plan', 'coupon', 'user__userprofile'),
+        id=payment_id
+    )
+    user_profile = getattr(payment.user, 'userprofile', None)
+    context = {
+        'payment': payment,
+        'user': payment.user,
+        'plan': payment.plan,
+        'coupon': payment.coupon,
+        'original_amount': payment.amount,
+        'discount': payment.discount_amount,
+        'final_amount': payment.final_amount,
+        'user_upi_id': user_profile.upi_id if user_profile else '',
+    }
+    return render(request, 'payment_receipt.html', context)
+
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -1088,60 +1145,51 @@ def home(request):
     }
     
     return render(request, 'index.html', context) 
-   
+
 def welcome(request):
-    """
-    Display welcome/splash page
-    Shows first when user visits the site
-    Then redirects to home page after 5 seconds or button click
-    """
-    return render(request, 'welcome.html')
-
-
+    categories = Category.objects.all()
+    return render(request, 'landing.html', {
+        'categories': categories,
+    })
+# or 'welcome.html'
 # ✅ YOUR EXISTING HOME VIEW - Keep this as it is
+
 def home(request):
-    """
-    Display news homepage with articles
-    This is shown after welcome page redirect
-    """
-    try:
-        # Get all categories
-        categories = Category.objects.all()
-        active_category = request.GET.get('category', '')
-        
-        # Get featured article
-        featured = Article.objects.filter(is_featured=True).first()
-        
-        # Get trending articles (by views)
-        trending = Article.objects.order_by('-views')[:5]
-        
-        # Get latest articles
-        articles = Article.objects.order_by('-created_at')
-        
-        # Filter by category if selected
-        if active_category:
-            articles = articles.filter(category__slug=active_category)
-        
-        # Get API news (from your news API integration)
-        api_news = []
-        # Add your API news fetching logic here if needed
-        
-        context = {
-            'featured': featured,
-            'trending': trending,
-            'articles': articles,
-            'categories': categories,
-            'active_category': active_category,
-            'api_news': api_news,
-        }
-        
-        return render(request, 'index.html', context)
-    
-    except Exception as e:
-        print(f"Error in home view: {str(e)}")
-        return render(request, 'index.html', {'error': 'Error loading articles'})
+    """Home page with articles and filters"""
+    articles = Article.objects.filter(is_published=True)
+    categories = Category.objects.all()
 
+    query = request.GET.get('query', '')
+    category_slug = request.GET.get('category', '')
 
+    if query:
+        articles = articles.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(summary__icontains=query)
+        )
+    if category_slug:
+        articles = articles.filter(category__slug=category_slug)
+
+    api_news = get_news_from_api(category=category_slug if category_slug else None)
+    featured = articles.first()
+
+    trending = articles.order_by('-views')[:5]
+    latest = articles.order_by('-created_at')[:12]
+    banner_ads = Advertisement.objects.filter(position='banner_top', is_active=True)
+    sidebar_ads = Advertisement.objects.filter(position='sidebar', is_active=True)
+
+    return render(request, 'home.html', {
+        'articles': latest,
+        'featured': featured,
+        'trending': trending,
+        'categories': categories,
+        'query': query,
+        'active_category': category_slug,
+        'banner_ads': banner_ads,
+        'sidebar_ads': sidebar_ads,
+        'api_news': api_news,
+    })
 # ✅ ADD OTHER VIEWS AS NEEDED
 def article_detail(request, slug):
     """
@@ -1190,15 +1238,57 @@ def category_list(request, slug):
         return render(request, '404.html', {'message': 'Category not found'}, status=404)
     
 def category_articles(request, slug):
-    """Display all articles for a specific category"""
+    """Display category articles + latest API news (India/World)"""
     try:
         category = Category.objects.get(slug=slug)
-        articles = Article.objects.filter(category=category).order_by('-created_at')
-        
+        articles = Article.objects.filter(category=category, is_published=True).order_by('-created_at')
+
+        # NewsAPI latest for India/World.
+        # Your get_news_from_api() already fetches India + World and tags them.
+        api_news = get_news_from_api(category=slug)
+
         context = {
             'category': category,
             'articles': articles,
+            'api_news': api_news,
         }
         return render(request, 'category_articles.html', context)
     except Category.DoesNotExist:
-        return render(request, '404.html', status=404)    
+        return render(request, '404.html', status=404)
+
+    
+def about_us(request):
+    return render(request, 'about_us.html')
+    
+def contact_us(request):
+     return render(request, 'contact_us.html')
+
+def advertise_with_us(request):
+    return render(request, 'advertise.html')
+
+def privacy_policy(request):
+    return render(request, 'privacy_policy.html')
+
+def terms_of_use(request):
+    return render(request, 'terms_of_use.html')
+
+def cookie_policy(request):
+    return render(request, 'cookie_policy.html')
+
+def api_get_states(request):
+    return JsonResponse({'states': []})
+
+def api_get_districts(request):
+    return JsonResponse({'districts': []})
+
+def api_get_blocks(request):
+    return JsonResponse({'blocks': []})
+
+def api_get_news_by_location(request):
+    return JsonResponse({'news': []})
+
+def api_fetch_news_for_location(request):
+    return JsonResponse({'news': []})
+
+def meet_developers(request):
+    return render(request, 'meet_our_developers.html')

@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+ 
+{% block title %}Contact Us - NewsPortal{% endblock %}
+ 
+{% block content %}
+<div class="contact-container">
+  <!-- Hero Section -->
+  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 60px 20px; border-radius: 8px; margin-bottom: 40px; text-align: center;">
+    <h1 style="font-size: 48px; margin-bottom: 20px; font-family: 'Fraunces', serif; font-weight: 800;">Contact Us</h1>
+    <p style="font-size: 18px; max-width: 600px; margin: 0 auto; color: #ccc;">Have a story tip, feedback, or question? We'd love to hear from you!</p>
+  </div>
+ 
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
+    <!-- Contact Form -->
+    <div>
+      <div style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1);">
+        <h2 style="font-size: 28px; margin-bottom: 30px; color: #1a1a2e; font-family: 'Fraunces', serif;">Send us a Message</h2>
+        
+        <form method="POST" action="{% url 'contact_us' %}">
+          {% csrf_token %}
+ 
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #1a1a2e; font-weight: 600;">Full Name *</label>
+            <input type="text" name="name" value="{{ form_data.name|default:'' }}" required
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif;"
+                   placeholder="John Doe">
+          </div>
+ 
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #1a1a2e; font-weight: 600;">Email Address *</label>
+            <input type="email" name="email" value="{{ form_data.email|default:'' }}" required
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif;"
+                   placeholder="john@example.com">
+          </div>
+ 
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #1a1a2e; font-weight: 600;">Subject *</label>
+            <input type="text" name="subject" value="{{ form_data.subject|default:'' }}" required
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif;"
+                   placeholder="How can we help?">
+          </div>
+ 
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #1a1a2e; font-weight: 600;">Message *</label>
+            <textarea name="message" required rows="6"
+                      style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif; resize: vertical;"
+                      placeholder="Your message here...">{{ form_data.message|default:'' }}</textarea>
+          </div>
+ 
+          <button type="submit" style="width: 100%; background: #e63946; color: white; padding: 14px; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.3s;">
+            Send Message
+          </button>
+          <p style="font-size: 12px; color: #999; margin-top: 10px;">* Required fields</p>
+        </form>
+      </div>
+    </div>
+ 
+    <!-- Contact Info -->
+    <div>
+      <h2 style="font-size: 28px; margin-bottom: 30px; color: #1a1a2e; font-family: 'Fraunces', serif;">Get In Touch</h2>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #e63946;">
+        <h3 style="font-size: 18px; color: #e63946; margin-bottom: 10px; font-weight: 700;">📧 Email</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">
+          General Inquiries: <strong>info@newsportal.com</strong><br>
+          News Tips: <strong>tips@newsportal.com</strong><br>
+          Advertising: <strong>ads@newsportal.com</strong><br>
+          Support: <strong>support@newsportal.com</strong>
+        </p>
+      </div>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #f77f00;">
+        <h3 style="font-size: 18px; color: #f77f00; margin-bottom: 10px; font-weight: 700;">📍 Address</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">
+          NewsPortal Headquarters<br>
+          123 News Avenue<br>
+          New Delhi, Delhi 110001<br>
+          India
+        </p>
+      </div>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #06aed5;">
+        <h3 style="font-size: 18px; color: #06aed5; margin-bottom: 10px; font-weight: 700;">📞 Phone</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">
+          Main: <strong>+91 (11) 4567-8900</strong><br>
+          Whatsapp: <strong>+91 98765-43210</strong><br>
+          Toll Free: <strong>1800-NEWS-24</strong>
+        </p>
+      </div>
+ 
+      <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #386641;">
+        <h3 style="font-size: 18px; color: #386641; margin-bottom: 15px; font-weight: 700;">🌐 Follow Us</h3>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="https://twitter.com/newportal" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #1DA1F2; color: white; border-radius: 50%; text-decoration: none;">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="https://facebook.com/newportal" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #1877F2; color: white; border-radius: 50%; text-decoration: none;">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <a href="https://instagram.com/newportal" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(45deg, #fd5949, #d6249f, #285AEB); color: white; border-radius: 50%; text-decoration: none;">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://linkedin.com/company/newportal" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #0A66C2; color: white; border-radius: 50%; text-decoration: none;">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+          <a href="https://youtube.com/newportal" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #FF0000; color: white; border-radius: 50%; text-decoration: none;">
+            <i class="fab fa-youtube"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- FAQ Section -->
+  <div style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <h2 style="font-size: 28px; margin-bottom: 30px; color: #1a1a2e; font-family: 'Fraunces', serif;">Frequently Asked Questions</h2>
+ 
+    <div style="display: grid; gap: 20px;">
+      <div>
+        <h4 style="color: #e63946; font-weight: 700; margin-bottom: 8px;">How do I submit a news tip?</h4>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">You can submit news tips via email at tips@newsportal.com or use the contact form above. We investigate all credible tips and follow up with sources.</p>
+      </div>
+ 
+      <div>
+        <h4 style="color: #e63946; font-weight: 700; margin-bottom: 8px;">Do you accept guest articles?</h4>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">Yes! We welcome guest contributions from experts and experienced writers. Please email us with your article proposal at info@newsportal.com.</p>
+      </div>
+ 
+      <div>
+        <h4 style="color: #e63946; font-weight: 700; margin-bottom: 8px;">How can I report an error or inaccuracy?</h4>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">If you find an error in our reporting, please let us know immediately at corrections@newsportal.com. We take accuracy seriously and will investigate promptly.</p>
+      </div>
+ 
+      <div>
+        <h4 style="color: #e63946; font-weight: 700; margin-bottom: 8px;">What is your comment policy?</h4>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">We welcome thoughtful comments on our articles. However, we reserve the right to remove comments that are offensive, defamatory, or spam.</p>
+      </div>
+    </div>
+  </div>
+ 
+</div>
+{% endblock %}

@@ -1,0 +1,541 @@
+{% extends 'base.html' %}
+{% block title %}Meet Our Developers | NewsPortal{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── HERO SECTION ── */
+  .dev-hero {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    padding: 80px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dev-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(230, 57, 70, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(230, 57, 70, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .dev-hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .dev-hero h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+    line-height: 1.1;
+  }
+
+  .dev-hero h1 span {
+    color: #e63946;
+  }
+
+  .dev-hero-subtitle {
+    font-size: 18px;
+    color: #ccc;
+    margin-bottom: 30px;
+    line-height: 1.7;
+  }
+
+  /* ── TEAM SECTION ── */
+  .dev-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 80px 20px;
+  }
+
+  .dev-section-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  .dev-section-header h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #0d0d0d;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .dev-section-header p {
+    font-size: 16px;
+    color: #666;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* ── DEVELOPER CARDS GRID ── */
+  .dev-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 40px;
+    margin-bottom: 80px;
+  }
+
+  .dev-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s ease;
+    border: 1px solid #f0f0f0;
+  }
+
+  .dev-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(230, 57, 70, 0.15);
+    border-color: #e63946;
+  }
+
+  .dev-card-image {
+    width: 100%;
+    height: 320px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dev-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .dev-card:hover .dev-card-image img {
+    transform: scale(1.08);
+  }
+
+  .dev-card-image.no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+    color: #666;
+    font-size: 48px;
+  }
+
+  .dev-card-content {
+    padding: 32px 24px;
+  }
+
+  .dev-card-role {
+    display: inline-block;
+    background: #f5f5f5;
+    color: #e63946;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .dev-card-name {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0d0d0d;
+    margin-bottom: 8px;
+  }
+
+  .dev-card-title {
+    font-size: 14px;
+    color: #e63946;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  .dev-card-bio {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  /* ── SKILLS ── */
+  .dev-skills {
+    margin-bottom: 20px;
+  }
+
+  .dev-skills-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #0d0d0d;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .dev-skill-badge {
+    display: inline-block;
+    background: #f5f5f5;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #666;
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+
+  /* ── SOCIAL LINKS ── */
+  .dev-socials {
+    display: flex;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .dev-social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #f5f5f5;
+    border-radius: 50%;
+    color: #0d0d0d;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 16px;
+  }
+
+  .dev-social-link:hover {
+    background: #e63946;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  /* ── ALTERNATE LAYOUT (3-COLUMN TO 2-COLUMN FALLBACK) ── */
+  @media (max-width: 1024px) {
+    .dev-hero h1 {
+      font-size: 2.8rem;
+    }
+    
+    .dev-grid {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dev-hero {
+      padding: 60px 20px;
+    }
+
+    .dev-hero h1 {
+      font-size: 2.2rem;
+    }
+
+    .dev-container {
+      padding: 60px 20px;
+    }
+
+    .dev-section-header h2 {
+      font-size: 2rem;
+    }
+
+    .dev-grid {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .dev-card-content {
+      padding: 24px 20px;
+    }
+  }
+
+  /* ── CTA SECTION ── */
+  .dev-cta {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+    border-radius: 12px;
+    margin-top: 60px;
+  }
+
+  .dev-cta h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+
+  .dev-cta p {
+    font-size: 16px;
+    color: #ccc;
+    margin-bottom: 24px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .dev-cta-btn {
+    display: inline-block;
+    background: #e63946;
+    color: white;
+    padding: 12px 32px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .dev-cta-btn:hover {
+    background: #fff;
+    color: #e63946;
+    transform: translateY(-2px);
+  }
+
+  /* ── ABOUT TEAM ── */
+  .dev-about {
+    background: #f9f7f2;
+    padding: 60px 20px;
+    border-radius: 12px;
+    margin-bottom: 60px;
+  }
+
+  .dev-about h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #0d0d0d;
+    margin-bottom: 20px;
+  }
+
+  .dev-about p {
+    font-size: 15px;
+    color: #666;
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+
+  .dev-about p:last-child {
+    margin-bottom: 0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO SECTION ── -->
+<section class="dev-hero">
+  <div class="dev-hero-content">
+    <h1>Meet Our <span>Developer</span></h1>
+    <p class="dev-hero-subtitle">
+      Passionate technologist crafting the future of news journalism through clean code and innovative solutions.
+    </p>
+  </div>
+</section>
+
+<!-- ── MAIN CONTENT CONTAINER ── -->
+<div class="dev-container">
+
+  <!-- About Team Section -->
+  <div class="dev-about">
+    <h3>Our Development Team</h3>
+    <p>
+      At NewsPortal, our development team is committed to building reliable, scalable, and user-centric solutions that bring the latest news to millions of readers. With expertise in full-stack development, database architecture, and modern web technologies, we're constantly innovating to improve the reading experience.
+    </p>
+    <p>
+      Each team member brings unique skills and perspectives, working collaboratively to overcome challenges and deliver excellence in every project.
+    </p>
+  </div>
+
+  <!-- ── TEAM GRID ── -->
+  <div class="dev-section-header">
+    <h2>Meet the Team</h2>
+    <p>Talented professionals dedicated to building exceptional digital experiences</p>
+  </div>
+
+  <div class="dev-grid">
+
+    <!-- Developer Card 1: Shubham Pandey (BCA Student) -->
+    <div class="dev-card">
+      <div class="dev-card-image no-image">
+        👨‍💻
+      </div>
+      <div class="dev-card-content">
+        <span class="dev-card-role">Full Stack Developer</span>
+        <h3 class="dev-card-name">Shubham Pandey</h3>
+        <p class="dev-card-title">BCA Student | Backend Specialist</p>
+        <p class="dev-card-bio">
+          Driven computer science student specializing in Python and Django development. Strong focus on building robust backend systems and database architecture for high-traffic applications.
+        </p>
+        
+        <div class="dev-skills">
+          <span class="dev-skills-label">Skills</span>
+          <span class="dev-skill-badge">Python</span>
+          <span class="dev-skill-badge">Django</span>
+          <span class="dev-skill-badge">PostgreSQL</span>
+          <span class="dev-skill-badge">RESTful APIs</span>
+          <span class="dev-skill-badge">HTML/CSS</span>
+        </div>
+
+        <div class="dev-socials">
+          <a href="https://github.com" class="dev-social-link" title="GitHub">
+            <i class="fab fa-github"></i>
+          </a>
+          <a href="https://linkedin.com" class="dev-social-link" title="LinkedIn">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+          <a href="https://twitter.com" class="dev-social-link" title="Twitter">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="mailto:contact@email.com" class="dev-social-link" title="Email">
+            <i class="fas fa-envelope"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Developer Card 2 Template -->
+    <div class="dev-card">
+      <div class="dev-card-image no-image">
+        👨‍💻
+      </div>
+      <div class="dev-card-content">
+        <span class="dev-card-role">Frontend Developer</span>
+        <h3 class="dev-card-name">Your Team Member</h3>
+        <p class="dev-card-title">UI/UX Specialist</p>
+        <p class="dev-card-bio">
+          Experienced frontend developer passionate about creating beautiful, responsive interfaces. Specializes in modern JavaScript frameworks and design systems.
+        </p>
+        
+        <div class="dev-skills">
+          <span class="dev-skills-label">Skills</span>
+          <span class="dev-skill-badge">React.js</span>
+          <span class="dev-skill-badge">JavaScript</span>
+          <span class="dev-skill-badge">CSS3</span>
+          <span class="dev-skill-badge">Bootstrap</span>
+          <span class="dev-skill-badge">Figma</span>
+        </div>
+
+        <div class="dev-socials">
+          <a href="https://github.com" class="dev-social-link" title="GitHub">
+            <i class="fab fa-github"></i>
+          </a>
+          <a href="https://linkedin.com" class="dev-social-link" title="LinkedIn">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+          <a href="https://twitter.com" class="dev-social-link" title="Twitter">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="mailto:contact@email.com" class="dev-social-link" title="Email">
+            <i class="fas fa-envelope"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Developer Card 3 Template -->
+    <div class="dev-card">
+      <div class="dev-card-image no-image">
+        👨‍💻
+      </div>
+      <div class="dev-card-content">
+        <span class="dev-card-role">DevOps / Infrastructure</span>
+        <h3 class="dev-card-name">Team Member Name</h3>
+        <p class="dev-card-title">Cloud & Infrastructure Lead</p>
+        <p class="dev-card-bio">
+          Expert in cloud infrastructure and deployment automation. Ensures scalable, secure, and reliable systems that support millions of daily users.
+        </p>
+        
+        <div class="dev-skills">
+          <span class="dev-skills-label">Skills</span>
+          <span class="dev-skill-badge">AWS</span>
+          <span class="dev-skill-badge">Docker</span>
+          <span class="dev-skill-badge">Kubernetes</span>
+          <span class="dev-skill-badge">CI/CD</span>
+          <span class="dev-skill-badge">Linux</span>
+        </div>
+
+        <div class="dev-socials">
+          <a href="https://github.com" class="dev-social-link" title="GitHub">
+            <i class="fab fa-github"></i>
+          </a>
+          <a href="https://linkedin.com" class="dev-social-link" title="LinkedIn">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+          <a href="https://twitter.com" class="dev-social-link" title="Twitter">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="mailto:contact@email.com" class="dev-social-link" title="Email">
+            <i class="fas fa-envelope"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── CTA SECTION ── -->
+  <section class="dev-cta">
+    <h2>Join Our Development Team</h2>
+    <p>We're always looking for talented developers who are passionate about news, technology, and making an impact in the digital space.</p>
+    <a href="{% url 'contact_us' %}" class="dev-cta-btn">Get In Touch</a>
+  </section>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Add animation on scroll
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -100px 0px'
+  };
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.dev-card').forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(card);
+  });
+</script>
+{% endblock %}
